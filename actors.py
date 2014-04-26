@@ -99,14 +99,21 @@ class Actor(object):
 
             target_tile_x = self.map.data[int(target_x)][int(pos.y)]
             if target_tile_x.type in game_view.TileTypes.Impassable:
-                amount.x = (int(target_x)-pos.x-self.threshold)
+                if amount.x > 0:
+                    amount.x = (int(target_x)-pos.x-self.threshold)
+                else:
+                    amount.x = (int(target_x)+1-pos.x+self.threshold)
+                
                 target_x = pos.x + amount.x
                 print target_x
                 
             elif (int(target_x),int(pos.y)) in self.map.object_cache:
                 obj = self.map.object_cache[int(target_x),int(pos.y)]
                 if obj.Contains(Point(target_x,pos.y)):
-                    amount.x = (int(target_x)-pos.x-self.threshold)
+                    if amount.x > 0:
+                        amount.x = (int(target_x)-pos.x-self.threshold)
+                    else:
+                        amount.x = (int(target_x)+1-pos.x+self.threshold)
                     target_x = pos.x + amount.x
 
         for corner in self.corners:
@@ -130,8 +137,10 @@ class Actor(object):
             elif (int(pos.x),int(target_y)) in self.map.object_cache:
                 obj = self.map.object_cache[int(pos.x),int(target_y)]
                 if obj.Contains(Point(pos.x,target_y)):
-                    print 'd'
-                    amount.y = (int(target_y)-pos.y-self.threshold)
+                    if amount.y > 0:
+                        amount.y = (int(target_y)-pos.y-self.threshold)
+                    else:
+                        amount.y = (int(target_y)+1+self.threshold-pos.y)
                     target_y = pos.y + amount.y
             
         #self.move_speed.y = amount.y

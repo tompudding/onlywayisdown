@@ -86,6 +86,7 @@ class GameMode(Mode):
 
     def __init__(self,parent):
         self.parent = parent
+        self.parent.viewpos.Follow(globals.time,self.parent.map.player)
         bl = self.parent.GetRelative(Point(0,0))
         tr = bl + self.parent.GetRelative(globals.screen)
         self.blurb_text = ui.TextBox(parent = self.parent,
