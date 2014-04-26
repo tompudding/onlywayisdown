@@ -180,7 +180,7 @@ class GameMap(object):
                      '.' : TileTypes.GRASS,
                      'p' : TileTypes.PLAYER,}
     def __init__(self,name,parent):
-        self.size   = Point(40,23)
+        self.size   = Point(128,92)
         self.data   = [[TileTypes.AIR for i in xrange(self.size.y)] for j in xrange(self.size.x)]
         self.object_cache = {}
         self.object_list = []
@@ -231,7 +231,7 @@ class GameView(ui.RootElement):
         self.map = GameMap('level.txt',self)
         self.map.world_size = self.map.size * globals.tile_dimensions
         print self.map.world_size
-        self.viewpos = Viewpos(Point(0,0))
+        self.viewpos = Viewpos(Point(0,self.map.world_size.y-globals.screen.y))
         self.game_over = False 
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
