@@ -13,6 +13,38 @@ class Directions:
     RIGHT = 2
     LEFT  = 3
 
+class Animation(object):
+    fps = 8
+    num_frames = 8
+    def __init__(self,texture,name):
+        self.texture = texture
+        self.name = name
+        self.still_tc = globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,self.name))
+        self.tcs = []
+        self.start = 0
+        for i in xrange(self.num_frames):
+            self.tcs.append(globals.atlas.TextureSpriteCoords('%s_walk_right_%d.png' % (self.texture,i)))
+            
+        new_tcs = range(self.num_frames)
+        if self.name != 'right':
+            for i in xrange(self.num_frames):
+                #flip the x-coords...
+                j = self.num_frames - 1 - i
+                new_tcs[i] = [self.tcs[j][3],self.tcs[j][2],self.tcs[j][1],self.tcs[j][0]]
+
+            self.tcs = new_tcs
+
+    def SetStart(self,x):
+        self.start = x
+
+    def GetTc(self,speed,x):
+        if abs(speed) < 0.0001:
+            return self.still_tc
+        print x,self.start
+        elapsed = (x - self.start)*0.125
+        frame = int((elapsed*self.fps)%self.num_frames)
+        return self.tcs[frame]
+
 class Actor(object):
     texture = None
     width = None
@@ -34,14 +66,11 @@ class Actor(object):
         self.move_speed = Point(0,0)
         self.move_direction = Point(0,0)
         for dir,name in self.dirsa:
-            try:
-                tc = globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))
-            except KeyError:
-                tc = globals.atlas.TextureSpriteCoords('%s_front.png' % self.texture)
-            self.dirs[dir] = tc
+            self.dirs[dir] = Animation(self.texture,name)
+
         #self.dirs = dict((dir,globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))) for (dir,name) in self.dirs)
         self.dir = Directions.RIGHT
-        self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir])
+        self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir].GetTc(0,0))
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
         self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
         self.SetPos(pos)
@@ -55,8 +84,8 @@ class Actor(object):
         extra = Point(self.width,self.height)*(self.overscan-1)
         bl = (pos*globals.tile_dimensions) - extra/2
         tr = bl + over_size
-        #bl = bl.to_int()
-        #tr = tr.to_int()
+        bl = bl.to_int()
+        tr = tr.to_int()
         self.quad.SetVertices(bl,tr,4)
 
     def Facing(self):
@@ -71,7 +100,10 @@ class Actor(object):
                 return True
         return False
 
-    def Move(self):
+    def Update(self,t):
+        self.Move(t)
+
+    def Move(self,t):
         if self.last_update == None:
             self.last_update = globals.time
             return
@@ -95,7 +127,8 @@ class Actor(object):
             dir = Directions.LEFT
         if dir != None and dir != self.dir:
             self.dir = dir
-            self.quad.SetTextureCoordinates(self.dirs[self.dir])
+            self.dirs[self.dir].SetStart(self.pos.x)
+        self.quad.SetTextureCoordinates(self.dirs[self.dir].GetTc(amount.x,self.pos.x))
 
         #check each of our four corners
         for corner in self.corners:

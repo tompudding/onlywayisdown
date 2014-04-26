@@ -3,3 +3,11 @@ resource/sprites/player_back.png:tiles_atlas_0.png:32:992.0:24:32
 resource/sprites/player_front.png:tiles_atlas_0.png:56:992.0:24:32
 resource/sprites/player_left.png:tiles_atlas_0.png:80:992.0:24:32
 resource/sprites/player_right.png:tiles_atlas_0.png:104:992.0:24:32
+resource/sprites/player_walk_right_0.png:tiles_atlas_0.png:128:992.0:24:32
+resource/sprites/player_walk_right_1.png:tiles_atlas_0.png:152:992.0:24:32
+resource/sprites/player_walk_right_2.png:tiles_atlas_0.png:176:992.0:24:32
+resource/sprites/player_walk_right_3.png:tiles_atlas_0.png:200:992.0:24:32
+resource/sprites/player_walk_right_4.png:tiles_atlas_0.png:224:992.0:24:32
+resource/sprites/player_walk_right_5.png:tiles_atlas_0.png:248:992.0:24:32
+resource/sprites/player_walk_right_6.png:tiles_atlas_0.png:272:992.0:24:32
+resource/sprites/player_walk_right_7.png:tiles_atlas_0.png:296:992.0:24:32

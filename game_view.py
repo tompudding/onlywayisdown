@@ -271,7 +271,7 @@ class GameView(ui.RootElement):
         if self.viewpos.pos.y > (self.map.world_size.y - globals.screen.y):
             self.viewpos.pos.y = (self.map.world_size.y - globals.screen.y)
 
-        self.map.player.Move()
+        self.map.player.Update(t)
 
     def GameOver(self):
         self.game_over = True
