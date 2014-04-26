@@ -49,8 +49,6 @@ def main():
             #print 'FPS:',clock.get_fps()
             last = t
         
-        #globals.current_time = t
-
         globals.current_view.Update(t)
         globals.current_view.Draw()
         globals.screen_root.Draw()

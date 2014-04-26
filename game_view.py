@@ -116,6 +116,7 @@ class TileTypes:
     AIR                 = 1
     GRASS               = 2
     PLAYER              = 3
+    Impassable          = set((GRASS,))
 
 class TileData(object):
     texture_names = {TileTypes.GRASS         : 'grass.png',
@@ -216,12 +217,12 @@ class GameView(ui.RootElement):
         self.map.world_size = self.map.size * globals.tile_dimensions
         print self.map.world_size
         self.viewpos = Viewpos(Point(0,0))
-        self.game_over = False
+        self.game_over = False 
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
         super(GameView,self).__init__(Point(0,0),globals.screen)
         #skip titles for development of the main game
-        self.mode = modes.Titles(self)
+        self.mode = modes.GameMode(self)
         #self.mode = modes.LevelOne(self)
         self.StartMusic()
 
@@ -245,6 +246,17 @@ class GameView(ui.RootElement):
             return
             
         self.t = t
+        self.viewpos.Update(t)
+        if self.viewpos.pos.x < 0:
+            self.viewpos.pos.x = 0
+        if self.viewpos.pos.y < 0:
+            self.viewpos.pos.y = 0
+        if self.viewpos.pos.x > (self.map.world_size.x - globals.screen.x):
+            self.viewpos.pos.x = (self.map.world_size.x - globals.screen.x)
+        if self.viewpos.pos.y > (self.map.world_size.y - globals.screen.y):
+            self.viewpos.pos.y = (self.map.world_size.y - globals.screen.y)
+
+        self.map.player.Move()
 
     def GameOver(self):
         self.game_over = True

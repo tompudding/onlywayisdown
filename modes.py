@@ -68,9 +68,45 @@ class Titles(Mode):
         return TitleStages.STARTED
 
 class GameMode(Mode):
+    blurb = "THE ONLY WAY IS DOWN"
+    speed = 8
+    direction_amounts = {pygame.K_LEFT  : Point(-0.01*speed, 0.00),
+                         pygame.K_RIGHT : Point( 0.01*speed, 0.00),
+                         pygame.K_UP    : Point( 0.00, 0.01*speed),
+                         pygame.K_DOWN  : Point( 0.00,-0.01*speed)}
+    class KeyFlags:
+        LEFT  = 1
+        RIGHT = 2
+        UP    = 4
+        DOWN  = 8
+    keyflags = {pygame.K_LEFT  : KeyFlags.LEFT,
+                pygame.K_RIGHT : KeyFlags.RIGHT,
+                pygame.K_UP    : KeyFlags.UP,
+                pygame.K_DOWN  : KeyFlags.DOWN}
+
     def __init__(self,parent):
         self.parent = parent
-        
+        bl = self.parent.GetRelative(Point(0,0))
+        tr = bl + self.parent.GetRelative(globals.screen)
+        self.blurb_text = ui.TextBox(parent = self.parent,
+                                     bl     = bl         ,
+                                     tr     = tr         ,
+                                     text   = self.blurb ,
+                                     textType = drawing.texture.TextTypes.GRID_RELATIVE,
+                                     colour = (1,1,1,1),
+                                     scale  = 4)
+        self.keydownmap = 0
+
+    def KeyDown(self,key):
+        if key in self.direction_amounts:
+            self.keydownmap |= self.keyflags[key]
+            self.parent.map.player.move_speed += self.direction_amounts[key]
+
+    def KeyUp(self,key):
+        if key in self.direction_amounts and (self.keydownmap & self.keyflags[key]):
+            self.keydownmap &= (~self.keyflags[key])
+            self.parent.map.player.move_speed -= self.direction_amounts[key]
+
 
 class GameOver(Mode):
     blurb = "GAME OVER"
