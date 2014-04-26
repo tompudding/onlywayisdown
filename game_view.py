@@ -130,6 +130,7 @@ class TileData(object):
             self.name = self.texture_names[TileTypes.GRASS]
         #How big are we?
         self.size = ((globals.atlas.SubimageSprite(self.name).size)/globals.tile_dimensions).to_int()
+
         self.quad = drawing.Quad(globals.quad_buffer,tc = globals.atlas.TextureSpriteCoords(self.name))
         bl        = pos * globals.tile_dimensions
         tr        = bl + self.size*globals.tile_dimensions
@@ -139,7 +140,22 @@ class TileData(object):
     def Interact(self,player):
         pass
 
+class TileDataAir(TileData):
+    def __init__(self,type,pos):
+        self.type = type
+        self.pos = pos
+        self.name = 'air'
+        self.size = Point(1,1)
+
+    def Delete(self):
+        pass
+
+    def Interact(self,player):
+        pass
+
 def TileDataFactory(map,type,pos):
+    if type in (TileTypes.AIR,TileTypes.PLAYER):
+        return TileDataAir(type,pos)
     return TileData(type,pos)
 
 class GameMap(object):
@@ -147,7 +163,7 @@ class GameMap(object):
                      '.' : TileTypes.GRASS,
                      'p' : TileTypes.PLAYER,}
     def __init__(self,name,parent):
-        self.size   = Point(89,49)
+        self.size   = Point(40,23)
         self.data   = [[TileTypes.AIR for i in xrange(self.size.y)] for j in xrange(self.size.x)]
         self.object_cache = {}
         self.object_list = []
@@ -166,12 +182,12 @@ class GameMap(object):
                     line = line[:self.size.x]
                 for inv_x,tile in enumerate(line[::-1]):
                     x = self.size.x-1-inv_x
+                    print x,y
                     #try:
                     if 1:
                         td = TileDataFactory(self,self.input_mapping[tile],Point(x,y))
                         for tile_x in xrange(td.size.x):
                             for tile_y in xrange(td.size.y):
-                                print x,y,td.size
                                 if self.data[x+tile_x][y+tile_y] != TileTypes.AIR:
                                     self.data[x+tile_x][y+tile_y].Delete()
                                     self.data[x+tile_x][y+tile_y] = TileTypes.AIR
@@ -198,7 +214,8 @@ class GameView(ui.RootElement):
         self.atlas = globals.atlas = drawing.texture.TextureAtlas('tiles_atlas_0.png','tiles_atlas.txt')
         self.map = GameMap('level.txt',self)
         self.map.world_size = self.map.size * globals.tile_dimensions
-        self.viewpos = Viewpos(Point(915,0))
+        print self.map.world_size
+        self.viewpos = Viewpos(Point(0,0))
         self.game_over = False
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
@@ -215,11 +232,12 @@ class GameView(ui.RootElement):
 
     def Draw(self):
         drawing.ResetState()
-        drawing.DrawNoTexture(globals.line_buffer)
-        drawing.DrawNoTexture(globals.colour_tiles)
+        drawing.Translate(-self.viewpos.pos.x,-self.viewpos.pos.y,0)
+        drawing.DrawAll(globals.quad_buffer,self.atlas.texture.texture)
         drawing.DrawAll(globals.nonstatic_text_buffer,globals.text_manager.atlas.texture.texture)
         
     def Update(self,t):
+        #print self.viewpos.pos
         if self.mode:
             self.mode.Update(t)
 
