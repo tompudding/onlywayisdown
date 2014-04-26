@@ -1,1 +1,5 @@
-petscii.png:tiles_atlas_0.png:0:448:128:64
+resource/sprites/grass.png:tiles_atlas_0.png:0:992.0:32:32
+resource/sprites/player_back.png:tiles_atlas_0.png:32:992.0:24:32
+resource/sprites/player_front.png:tiles_atlas_0.png:56:992.0:24:32
+resource/sprites/player_left.png:tiles_atlas_0.png:80:992.0:24:32
+resource/sprites/player_right.png:tiles_atlas_0.png:104:992.0:24:32
