@@ -115,6 +115,10 @@ class GameMode(Mode):
             self.parent.map.player.jumping = False
             self.parent.map.player.jumped  = False
 
+    def MouseButtonDown(self,pos,button):
+        self.parent.map.player.Click(pos,button)
+        return False,False
+
 
 class GameOver(Mode):
     blurb = "GAME OVER"

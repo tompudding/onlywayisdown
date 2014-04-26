@@ -20,6 +20,10 @@ class Animation(object):
         self.texture = texture
         self.name = name
         self.still_tc = globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,self.name))
+        if name in ('left','right'):
+            self.punch_tc = globals.atlas.TextureSpriteCoords('%s_%s_punch.png' % (self.texture,self.name))
+        else:
+            self.punch_tc = self.still_tc
         self.tcs = []
         self.start = 0
         for i in xrange(self.num_frames):
@@ -37,19 +41,33 @@ class Animation(object):
     def SetStart(self,x):
         self.start = x
 
-    def GetTc(self,speed,x):
-        if abs(speed) < 0.0001:
+    def GetTc(self,still,x):
+        if still:
             return self.still_tc
         elapsed = (x - self.start)*0.125
         frame = int((elapsed*self.fps)%self.num_frames)
         return self.tcs[frame]
 
+class Fist(object):
+    duration = 500
+    def __init__(self,player):
+        self.player = player
+        
+    def Fire(self,pos):
+        self.end = globals.time + self.duration
+        self.save_anim = self.player.dirs[self.player.dir]
+        self.save_tc = self.save_anim.still_tc
+        self.player.quad.SetTextureCoordinates(self.save_anim.punch_tc)
+        
+    def Update(self,t):
+        return True if t > self.end else False
+
 class Actor(object):
-    texture = None
-    width = None
-    height = None
+    texture   = None
+    width     = None
+    height    = None
     threshold = 0.01
-    overscan = 1.05
+    overscan  = 1.05
     def __init__(self,map,pos):
         self.map  = map
         self.last_update = None
@@ -77,6 +95,8 @@ class Actor(object):
         self.jumping = False
         self.jumped = False
         self.walked = 0
+        self.weapon = Fist(self)
+        self.attacking = False
 
     def SetPos(self,pos):
         self.pos = pos
@@ -101,6 +121,10 @@ class Actor(object):
         return False
 
     def Update(self,t):
+        if self.attacking:
+            finished = self.weapon.Update(t)
+            if finished:
+                self.attacking = False
         self.Move(t)
 
     def Move(self,t):
@@ -109,6 +133,8 @@ class Actor(object):
             return
         elapsed = globals.time - self.last_update
         self.last_update = globals.time
+        if self.attacking:
+            return
         
         if self.on_ground():
             self.move_speed.x += self.move_direction.x*elapsed*0.03
@@ -129,9 +155,15 @@ class Actor(object):
         if dir != None and dir != self.dir:
             self.dir = dir
             self.dirs[self.dir].SetStart(self.walked)
-        
-        self.quad.SetTextureCoordinates(self.dirs[self.dir].GetTc(amount.x,self.walked))
+
         if abs(amount.x) <  0.0001:
+            self.still = True
+        else:
+            self.still = False
+
+        self.quad.SetTextureCoordinates(self.dirs[self.dir].GetTc(self.still,self.walked))
+        
+        if self.still:
             self.walked = 0
 
         #check each of our four corners
@@ -196,6 +228,10 @@ class Actor(object):
             
         self.SetPos(self.pos + amount)
 
+    def Click(self,pos,button):
+        if self.still and not self.attacking:
+            self.weapon.Fire(pos)
+            self.attacking = True
 
     def GetPos(self):
         return self.pos

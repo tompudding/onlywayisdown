@@ -300,3 +300,11 @@ class GameView(ui.RootElement):
                 pygame.mixer.music.set_volume(1)
         self.mode.KeyUp(key)
 
+    def MouseButtonDown(self,pos,button):
+        if self.mode:
+            pos = self.viewpos.pos + pos
+            return self.mode.MouseButtonDown(pos,button)
+        else:
+            return False,False
+
+
