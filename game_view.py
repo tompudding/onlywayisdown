@@ -29,7 +29,7 @@ class Viewpos(object):
         self.start_time    = None
 
     def Set(self,point):
-        self.pos = point.to_int()
+        self.pos = point#.to_int()
         self.NoTarget()
 
     def SetTarget(self,point,t,rate=2,callback = None):
@@ -73,7 +73,7 @@ class Viewpos(object):
         try:
             return self.update(t)
         finally:
-            self.pos = self.pos.to_int()
+            self.pos = self.pos#.to_int()
 
     def update(self,t):
         self.t = t
@@ -130,9 +130,25 @@ class TileData(object):
         except KeyError:
             self.name = self.texture_names[TileTypes.GRASS]
         #How big are we?
-        self.size = ((globals.atlas.SubimageSprite(self.name).size)/globals.tile_dimensions).to_int()
+        self.size = Point(1,1)
+        self.tex_size = (globals.atlas.SubimageSprite(self.name).size)/globals.tile_dimensions
 
-        self.quad = drawing.Quad(globals.quad_buffer,tc = globals.atlas.TextureSpriteCoords(self.name))
+        #what tcs do we want?
+        full_tc = globals.atlas.TextureSpriteCoords(self.name)
+        
+        bl_tc = Point(pos.x%self.tex_size.x,pos.y%self.tex_size.y)/(self.tex_size.to_float())
+        tr_tc = bl_tc + Point(1,1)/(self.tex_size.to_float())
+
+        full_tc_size = (full_tc[2][0]-full_tc[0][0],full_tc[2][1]-full_tc[0][1])
+
+        tc = [[full_tc[0][0] + bl_tc[0]*full_tc_size[0],full_tc[0][1] + bl_tc[1]*full_tc_size[1]],
+              [full_tc[0][0] + bl_tc[0]*full_tc_size[0],full_tc[0][1] + tr_tc[1]*full_tc_size[1]],
+              [full_tc[0][0] + tr_tc[0]*full_tc_size[0],full_tc[0][1] + tr_tc[1]*full_tc_size[1]],
+              [full_tc[0][0] + tr_tc[0]*full_tc_size[0],full_tc[0][1] + bl_tc[1]*full_tc_size[1]]]
+        
+        #print tc
+
+        self.quad = drawing.Quad(globals.quad_buffer,tc = tc)
         bl        = pos * globals.tile_dimensions
         tr        = bl + self.size*globals.tile_dimensions
         self.quad.SetVertices(bl,tr,0)
@@ -183,7 +199,6 @@ class GameMap(object):
                     line = line[:self.size.x]
                 for inv_x,tile in enumerate(line[::-1]):
                     x = self.size.x-1-inv_x
-                    print x,y
                     #try:
                     if 1:
                         td = TileDataFactory(self,self.input_mapping[tile],Point(x,y))
