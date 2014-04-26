@@ -18,6 +18,7 @@ class Actor(object):
     width = None
     height = None
     threshold = 0.01
+    overscan = 1.05
     def __init__(self,map,pos):
         self.map  = map
         self.last_update = None
@@ -49,8 +50,10 @@ class Actor(object):
 
     def SetPos(self,pos):
         self.pos = pos
-        bl = pos * globals.tile_dimensions
-        tr = bl + (globals.tile_scale*Point(self.width,self.height))
+        over_size = Point(self.width,self.height)*self.overscan
+        extra = Point(self.width,self.height)*(self.overscan-1)
+        bl = (pos*globals.tile_dimensions) - extra/2
+        tr = bl + over_size
         #bl = bl.to_int()
         #tr = tr.to_int()
         self.quad.SetVertices(bl,tr,4)
@@ -60,10 +63,11 @@ class Actor(object):
         return facing.to_int()
 
     def on_ground(self):
-        pos = self.pos + Point(self.size.x/2,-self.threshold*2)
-        target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
-        if target_tile_y.type in game_view.TileTypes.Impassable:
-            return True
+        for x in 0,self.size.x:
+            pos = self.pos + Point(x,-self.threshold*2)
+            target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
+            if target_tile_y.type in game_view.TileTypes.Impassable:
+                return True
         return False
 
     def Move(self):
@@ -109,7 +113,6 @@ class Actor(object):
                     amount.x = (int(target_x)+1-pos.x+self.threshold)
                 
                 target_x = pos.x + amount.x
-                print target_x
                 
             elif (int(target_x),int(pos.y)) in self.map.object_cache:
                 obj = self.map.object_cache[int(target_x),int(pos.y)]
@@ -124,7 +127,6 @@ class Actor(object):
             pos = self.pos + corner
             target_y = pos.y + amount.y
             if target_y >= self.map.size.y:
-                print 'a'
                 target_y = self.map.size.y-self.threshold
                 amount.y = target_y - pos.y
                 
@@ -159,6 +161,6 @@ class Actor(object):
 
 class Player(Actor):
     texture = 'player'
-    width = 24
-    height = 32
+    width = 24/Actor.overscan
+    height = 32/Actor.overscan
     jump_amount = 0.4
