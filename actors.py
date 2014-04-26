@@ -40,7 +40,6 @@ class Animation(object):
     def GetTc(self,speed,x):
         if abs(speed) < 0.0001:
             return self.still_tc
-        print x,self.start
         elapsed = (x - self.start)*0.125
         frame = int((elapsed*self.fps)%self.num_frames)
         return self.tcs[frame]
