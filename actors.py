@@ -16,18 +16,19 @@ class Directions:
 class Animation(object):
     fps = 8
     num_frames = 8
-    def __init__(self,texture,name):
+    def __init__(self,texture,name,item):
         self.texture = texture
         self.name = name
-        self.still_tc = globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,self.name))
+        self.still_tc = globals.atlas.TextureSpriteCoords('%s_%s_%s.png' % (self.texture,self.name,item))
         if name in ('left','right'):
-            self.punch_tc = globals.atlas.TextureSpriteCoords('%s_%s_punch.png' % (self.texture,self.name))
+            self.attack_tc = globals.atlas.TextureSpriteCoords('%s_%s_%s_attack.png' % (self.texture,self.name,item))
         else:
-            self.punch_tc = self.still_tc
-        self.tcs = []
+            self.attack_tc = self.still_tc
+
         self.start = 0
+        self.tcs = []
         for i in xrange(self.num_frames):
-            self.tcs.append(globals.atlas.TextureSpriteCoords('%s_walk_right_%d.png' % (self.texture,i)))
+            self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_right_%d.png' % (self.texture,item,i)))
             
         new_tcs = range(self.num_frames)
         if self.name != 'right':
@@ -48,19 +49,38 @@ class Animation(object):
         frame = int((elapsed*self.fps)%self.num_frames)
         return self.tcs[frame]
 
-class Fist(object):
-    duration = 500
+class WeaponTypes:
+    FIST   = 0
+    AXE    = 1
+    PISTOL = 2
+    
+    all = [FIST,AXE]
+    names = {FIST : 'fist',
+             AXE  : 'axe',
+             PISTOL : 'pistol'}
+
+class Weapon(object):
     def __init__(self,player):
         self.player = player
         
     def Fire(self,pos):
         self.end = globals.time + self.duration
-        self.save_anim = self.player.dirs[self.player.dir]
+        self.save_anim = self.player.dirs[self.player.dir][self.type]
         self.save_tc = self.save_anim.still_tc
-        self.player.quad.SetTextureCoordinates(self.save_anim.punch_tc)
+        self.player.quad.SetTextureCoordinates(self.save_anim.attack_tc)
         
     def Update(self,t):
         return True if t > self.end else False
+
+class Fist(Weapon):
+    duration = 500
+    type = WeaponTypes.FIST
+
+class Axe(Weapon):
+    duration = 800
+    type = WeaponTypes.AXE
+  
+
 
 class Actor(object):
     texture   = None
@@ -83,11 +103,14 @@ class Actor(object):
         self.move_speed = Point(0,0)
         self.move_direction = Point(0,0)
         for dir,name in self.dirsa:
-            self.dirs[dir] = Animation(self.texture,name)
+            self.dirs[dir] = {}
+            for weapon_type in WeaponTypes.all:
+                self.dirs[dir][weapon_type] = Animation(self.texture,name,WeaponTypes.names[weapon_type])
 
         #self.dirs = dict((dir,globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))) for (dir,name) in self.dirs)
         self.dir = Directions.RIGHT
-        self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir].GetTc(0,0))
+        self.weapon = Axe(self)
+        self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir][self.weapon.type].GetTc(0,0))
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
         self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
         self.SetPos(pos)
@@ -95,7 +118,7 @@ class Actor(object):
         self.jumping = False
         self.jumped = False
         self.walked = 0
-        self.weapon = Fist(self)
+        
         self.attacking = False
 
     def SetPos(self,pos):
@@ -154,14 +177,14 @@ class Actor(object):
             dir = Directions.LEFT
         if dir != None and dir != self.dir:
             self.dir = dir
-            self.dirs[self.dir].SetStart(self.walked)
+            self.dirs[self.dir][self.weapon.type].SetStart(self.walked)
 
         if abs(amount.x) <  0.0001:
             self.still = True
         else:
             self.still = False
 
-        self.quad.SetTextureCoordinates(self.dirs[self.dir].GetTc(self.still,self.walked))
+        self.quad.SetTextureCoordinates(self.dirs[self.dir][self.weapon.type].GetTc(self.still,self.walked))
         
         if self.still:
             self.walked = 0
