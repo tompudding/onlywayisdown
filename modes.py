@@ -102,7 +102,7 @@ class GameMode(Mode):
     def KeyDown(self,key):
         if key in self.direction_amounts:
             self.keydownmap |= self.keyflags[key]
-            self.parent.map.player.move_speed += self.direction_amounts[key]
+            self.parent.map.player.move_direction += self.direction_amounts[key]
         elif key == pygame.K_SPACE:
             self.parent.map.player.jumping = True
             self.parent.map.player.jumped  = False
@@ -110,7 +110,7 @@ class GameMode(Mode):
     def KeyUp(self,key):
         if key in self.direction_amounts and (self.keydownmap & self.keyflags[key]):
             self.keydownmap &= (~self.keyflags[key])
-            self.parent.map.player.move_speed -= self.direction_amounts[key]
+            self.parent.map.player.move_direction -= self.direction_amounts[key]
         elif key == pygame.K_SPACE:
             self.parent.map.player.jumping = False
             self.parent.map.player.jumped  = False

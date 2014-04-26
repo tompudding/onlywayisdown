@@ -32,6 +32,7 @@ class Actor(object):
                          Directions.RIGHT : Point(1,0)}
         self.dirs = {}
         self.move_speed = Point(0,0)
+        self.move_direction = Point(0,0)
         for dir,name in self.dirsa:
             try:
                 tc = globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))
@@ -78,9 +79,12 @@ class Actor(object):
         self.last_update = globals.time
         
         if self.on_ground():
+            self.move_speed.x += self.move_direction.x*elapsed*0.03
             if self.jumping and not self.jumped:
                 self.move_speed.y += self.jump_amount
                 self.jumped = True
+            self.move_speed.x *= 0.8*(1-(elapsed/1000.0))
+        
         self.move_speed.y += globals.gravity*elapsed*0.03
         amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
         #print self.move_speed,amount
