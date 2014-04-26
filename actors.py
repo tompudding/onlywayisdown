@@ -43,18 +43,23 @@ class Actor(object):
         self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
         self.SetPos(pos)
         self.current_sound = None
+        self.jumping = False
+        self.jumped = False
 
     def SetPos(self,pos):
         self.pos = pos
         bl = pos * globals.tile_dimensions
         tr = bl + (globals.tile_scale*Point(self.width,self.height))
-        #bl = bl.to_int()
-        #tr = tr.to_int()
+        bl = bl.to_int()
+        tr = tr.to_int()
         self.quad.SetVertices(bl,tr,4)
 
     def Facing(self):
         facing = self.pos + (self.size/2) + self.dirs_pos[self.dir]
         return facing.to_int()
+
+    def on_ground(self):
+        return True
 
     def Move(self):
         if self.last_update == None:
@@ -62,7 +67,14 @@ class Actor(object):
             return
         elapsed = globals.time - self.last_update
         self.last_update = globals.time
-        amount = Point(self.move_speed.x*elapsed*0.03,0)
+        
+        if self.on_ground():
+            if self.jumping and not self.jumped:
+                self.move_speed.y += self.jump_amount
+                self.jumped = True
+        self.move_speed.y += globals.gravity*elapsed*0.03
+        amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
+        print self.move_speed,amount
         dir = None
         if amount.x > 0:
             dir = Directions.RIGHT
@@ -106,7 +118,10 @@ class Actor(object):
                 if obj.Contains(Point(pos.x,target_y)):
                     amount.y = 0
             
-
+        #self.move_speed.y = amount.y
+        if amount.y == 0:
+            self.move_speed.y = 0
+            
         self.SetPos(self.pos + amount)
 
 
@@ -117,3 +132,4 @@ class Player(Actor):
     texture = 'player'
     width = 24
     height = 32
+    jump_amount = 0.3

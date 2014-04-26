@@ -23,6 +23,7 @@ def Init():
     globals.sounds                = sounds.Sounds()
 
     globals.dirs = globals.types.Directories('resource')
+    globals.gravity = -0.05
 
     pygame.init()
     screen = pygame.display.set_mode((w,h),pygame.OPENGL|pygame.DOUBLEBUF)
