@@ -76,6 +76,7 @@ class Actor(object):
         self.current_sound = None
         self.jumping = False
         self.jumped = False
+        self.walked = 0
 
     def SetPos(self,pos):
         self.pos = pos
@@ -119,6 +120,7 @@ class Actor(object):
         self.move_speed.y += globals.gravity*elapsed*0.03
         amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
         #print self.move_speed,amount
+        self.walked += amount.x
         dir = None
         if amount.x > 0:
             dir = Directions.RIGHT
@@ -126,8 +128,11 @@ class Actor(object):
             dir = Directions.LEFT
         if dir != None and dir != self.dir:
             self.dir = dir
-            self.dirs[self.dir].SetStart(self.pos.x)
-        self.quad.SetTextureCoordinates(self.dirs[self.dir].GetTc(amount.x,self.pos.x))
+            self.dirs[self.dir].SetStart(self.walked)
+        
+        self.quad.SetTextureCoordinates(self.dirs[self.dir].GetTc(amount.x,self.walked))
+        if abs(amount.x) <  0.0001:
+            self.walked = 0
 
         #check each of our four corners
         for corner in self.corners:
