@@ -79,7 +79,7 @@ class Viewpos(object):
         self.t = t
         if self.follow:
             #We haven't locked onto it yet, so move closer, and lock on if it's below the threshold
-            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int()
+            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.4)
             if not fpos:
                 return
             target = fpos - (globals.screen*0.5).to_int()
@@ -188,6 +188,16 @@ class GameMap(object):
         self.doors  = []
         self.player = None
         self.parent = parent
+        tc = globals.atlas.TextureSpriteCoords('sky.png')
+        sky_size = globals.atlas.SubimageSprite('sky.png').size
+        tc_repeat = self.size.y*globals.tile_dimensions.y/sky_size.y
+        self.sky_quads = []
+        for i in xrange(tc_repeat):
+            q = drawing.Quad(globals.quad_buffer,tc = tc)
+            bl        = (Point(0,self.size.y-8)*globals.tile_dimensions) + Point(i*sky_size.x,0)
+            tr        = bl + sky_size
+            q.SetVertices(bl,tr,-0.1)
+            self.sky_quads.append(q)
 
         y = self.size.y - 1
         with open ('level.txt') as f:
