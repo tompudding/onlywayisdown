@@ -60,7 +60,11 @@ class Actor(object):
         return facing.to_int()
 
     def on_ground(self):
-        return True
+        pos = self.pos + Point(self.size.x/2,-self.threshold*2)
+        target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
+        if target_tile_y.type in game_view.TileTypes.Impassable:
+            return True
+        return False
 
     def Move(self):
         if self.last_update == None:
@@ -157,4 +161,4 @@ class Player(Actor):
     texture = 'player'
     width = 24
     height = 32
-    jump_amount = 0.3
+    jump_amount = 0.4

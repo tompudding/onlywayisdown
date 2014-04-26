@@ -69,20 +69,20 @@ class Titles(Mode):
 
 class GameMode(Mode):
     blurb = "THE ONLY WAY IS DOWN"
-    speed = 8
-    direction_amounts = {pygame.K_LEFT  : Point(-0.01*speed, 0.00),
-                         pygame.K_RIGHT : Point( 0.01*speed, 0.00),
-                         pygame.K_UP    : Point( 0.00, 0.01*speed),
-                         pygame.K_DOWN  : Point( 0.00,-0.01*speed)}
+    speed = 12
+    direction_amounts = {pygame.K_a  : Point(-0.01*speed, 0.00),
+                         pygame.K_d : Point( 0.01*speed, 0.00),
+                         pygame.K_w    : Point( 0.00, 0.00*speed),
+                         pygame.K_s  : Point( 0.00,-0.00*speed)}
     class KeyFlags:
         LEFT  = 1
         RIGHT = 2
         UP    = 4
         DOWN  = 8
-    keyflags = {pygame.K_LEFT  : KeyFlags.LEFT,
-                pygame.K_RIGHT : KeyFlags.RIGHT,
-                pygame.K_UP    : KeyFlags.UP,
-                pygame.K_DOWN  : KeyFlags.DOWN}
+    keyflags = {pygame.K_a  : KeyFlags.LEFT,
+                pygame.K_d : KeyFlags.RIGHT,
+                pygame.K_w    : KeyFlags.UP,
+                pygame.K_s  : KeyFlags.DOWN}
 
     def __init__(self,parent):
         self.parent = parent
