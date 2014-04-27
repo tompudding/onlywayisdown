@@ -104,6 +104,10 @@ class WeaponTypes:
 class Weapon(object):
     def __init__(self,player):
         self.player = player
+        self.icon_tc = globals.atlas.TextureSpriteCoords(self.icon)
+        
+    def SetIconQuad(self,quad):
+        quad.SetTextureCoordinates(self.icon_tc)
 
     def Disturbance(self):
         return Point(0,0)
@@ -145,6 +149,7 @@ class Fist(Weapon):
     damage = 10
     variance = 10
     vectors = {Directions.LEFT : Point(-0.2,1.5), Directions.RIGHT: Point(1.5,1.5)}
+    icon = 'fist.png'
     type = WeaponTypes.FIST
 
     def Disturbance(self):
@@ -160,10 +165,12 @@ class Axe(Weapon):
     damage = 20
     variance = 10
     vectors = {Directions.LEFT : Point(-0.2,1.5), Directions.RIGHT: Point(1.5,1.5)}
+    icon = 'axe.png'
     type = WeaponTypes.AXE
  
 class Pistol(Gun):
     duration = 200
+    icon = 'pistol.png'
     type = WeaponTypes.PISTOL
 
 
@@ -486,18 +493,10 @@ class Player(Actor):
     initial_health = 100
 
     def __init__(self,map,pos):
-        self.inventory = [Fist(self),Axe(self),Pistol(self)]
-        self.current_item = 0
-        self.weapon = self.inventory[self.current_item]
-        self.still = True
-        self.angle = 0
-        self.gun_pos = Point(14,21)
-        self.mouse_pos = Point(0,0)
         self.bullets = 6
-        super(Player,self).__init__(map,pos)
         self.info_box = ui.Box(parent = globals.screen_root,
                                pos = Point(0,0),
-                               tr = Point(1,0.08),
+                               tr = Point(1,0.07),
                                colour = (0,0,0,0.7))
         self.info_box.health_text = ui.TextBox(self.info_box,
                                                bl = Point(0.8,0),
@@ -515,6 +514,40 @@ class Player(Actor):
                                                colour = (1,1,0,1),
                                                scale = 3,
                                                alignment = drawing.texture.TextAlignments.CENTRE)
+        self.inv_quads = [drawing.Quad(globals.screen_texture_buffer,tc = globals.atlas.TextureSpriteCoords('empty.png')) for i in xrange(3)]
+        box_size = 12
+        sep_x = int((self.info_box.absolute.size.x*0.15 - box_size*3)/4)
+        sep_y = int((self.info_box.absolute.size.y - box_size)/2)
+        print self.info_box.absolute.size,sep_x,sep_y
+        for i in xrange(3):    
+            bl = self.info_box.absolute.bottom_left + Point(self.info_box.absolute.size.x*0.2,0) + Point(((i+1)*sep_x)+(i*box_size),sep_y)
+            tr = bl + Point(box_size,box_size)
+            print bl,tr
+            self.inv_quads[i].SetVertices(bl,tr,9000)
+            self.inv_quads[i].Enable()
+
+        self.inventory = [None,None,None]
+        self.num_items = 0
+        self.current_item = 0
+        self.attacking = False
+        self.AddItem(Fist(self))
+        self.AddItem(Axe(self))
+        self.AddItem(Pistol(self))
+        
+        self.weapon = self.inventory[self.current_item]
+        self.still = True
+        self.angle = 0
+        self.gun_pos = Point(14,21)
+        self.mouse_pos = Point(0,0)
+        
+        super(Player,self).__init__(map,pos)
+        
+    def AddItem(self,item):
+        self.inventory[self.num_items] = item
+        item.SetIconQuad(self.inv_quads[self.num_items])
+        self.num_items += 1
+        #auto select the new item
+        self.Select(self.current_item + 1)
 
     def Select(self,index):
         if not self.attacking and self.inventory[index]:

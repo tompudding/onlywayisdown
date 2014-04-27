@@ -306,6 +306,8 @@ class UIRoot(RootElement):
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
         for item in self.drawable_children:
             item.Draw()
+        drawing.ResetState()
+        drawing.DrawAll(globals.screen_texture_buffer,globals.atlas.texture.texture)
 
     def Update(self,t):
         #Would it be faster to make a list of items to remove and then remove them, rather than build a new list?

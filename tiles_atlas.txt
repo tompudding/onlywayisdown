@@ -74,5 +74,9 @@ resource/sprites/zombie_left_fist.png:tiles_atlas_0.png:728:968.0:20:24
 resource/sprites/zombie_left_fist_attack.png:tiles_atlas_0.png:748:968.0:20:24
 resource/sprites/zombie_right_fist.png:tiles_atlas_0.png:768:968.0:20:24
 resource/sprites/zombie_right_fist_attack.png:tiles_atlas_0.png:788:968.0:20:24
+resource/sprites/axe.png:tiles_atlas_0.png:808:980.0:12:12
+resource/sprites/fist.png:tiles_atlas_0.png:820:980.0:12:12
+resource/sprites/pistol.png:tiles_atlas_0.png:832:980.0:12:12
+resource/sprites/empty.png:tiles_atlas_0.png:844:982.0:10:10
 resource/sprites/splat.png:tiles_atlas_0.png:1020:1020.0:4:4
 resource/sprites/bullet.png:tiles_atlas_0.png:1020:1019.0:1:1
