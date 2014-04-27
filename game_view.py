@@ -145,6 +145,7 @@ class TileTypes:
     AXE                 = 11
     PISTOL              = 12
     BULLETS             = 13
+    HEALTH              = 14
     Impassable          = set((GRASS,ROCK,ROCK_FLOOR))
     Ladders             = set((LADDER_TOP,LADDER))
     LadderTops          = set((LADDER_TOP,))
@@ -160,6 +161,7 @@ class TileData(object):
                      TileTypes.SIGN1         : 'sign1.png',
                      TileTypes.AXE           : 'tile.png',
                      TileTypes.PISTOL        : 'tile.png',
+                     TileTypes.HEALTH        : 'tile.png',
                      TileTypes.BULLETS       : 'tile.png',
                      TileTypes.LADDER_TOP    : 'ladder.png'}
 
@@ -242,6 +244,7 @@ class GameMap(object):
                      'x' : TileTypes.AXE,
                      'P' : TileTypes.PISTOL,
                      'b' : TileTypes.BULLETS,
+                     'h' : TileTypes.HEALTH,
                      'z' : TileTypes.ZOMBIE}
     def __init__(self,name,parent):
         global naked_zombie
@@ -305,6 +308,9 @@ class GameMap(object):
                     if self.input_mapping[tile] == TileTypes.BULLETS:
                         bullets = actors.BulletsItem(self,Point(x+0.2,y))
                         self.actors.append(bullets)
+                    if self.input_mapping[tile] == TileTypes.HEALTH:
+                        health = actors.HealthItem(self,Point(x+0.2,y))
+                        self.actors.append(health)
                     #except KeyError:
                     #    raise globals.types.FatalError('Invalid map data')
                 y -= 1

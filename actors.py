@@ -256,6 +256,8 @@ class Actor(object):
 
     def AdjustHealth(self,amount):
         self.health += amount
+        if self.health > self.initial_health:
+            self.health = self.initial_health
         if self.health < 0:
             self.health = 0
 
