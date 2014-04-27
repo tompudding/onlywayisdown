@@ -228,13 +228,24 @@ class Actor(object):
                 return True
         return False
 
-    def on_ladder(self):
+    def above_ladder(self):
         for x in 0,self.size.x:
             pos = self.pos + Point(x,-self.threshold*2)
             target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
             if target_tile_y.type not in game_view.TileTypes.Ladders:
                 return False
         return True
+
+    def below_ladder(self):
+        for x in 0,self.size.x:
+            pos = self.pos + Point(x,self.threshold*2)
+            target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
+            if target_tile_y.type not in game_view.TileTypes.Ladders:
+                return False
+        return True
+
+    def on_ladder(self):
+        return self.above_ladder() or self.below_ladder()
 
     def Update(self,t):
         if self.attacking:
@@ -248,9 +259,6 @@ class Actor(object):
 
     def TriggerCollide(self,target):
         pass
-
-    def LadderMovement(self):
-        fd
 
     def Move(self,t):
         if self.last_update == None:
@@ -268,10 +276,10 @@ class Actor(object):
                 self.jumped = True
             self.move_speed.x *= 0.8*(1-(elapsed/1000.0))
 
-        if self.ladder and not self.on_ladder():
+        if self.ladder and not self.above_ladder():
             self.ladder = False
 
-        if self.ladder or (self.on_ladder() and self.move_direction.y < 0):
+        if self.ladder or (self.on_ladder() and self.move_direction.y != 0):
             #no gravity on the ladder
             self.ladder = True
             self.move_speed.y = self.move_direction.y
