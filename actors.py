@@ -316,12 +316,10 @@ class Player(Actor):
     def MouseMotion(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
         distance,angle = cmath.polar(complex(diff.x,diff.y))
-        print distance,angle
+        #print distance,angle
         if abs(angle)*2 > math.pi:
-            print 'left',self.move_speed
             self.dir = Directions.LEFT
         else:
-            print 'right',self.move_speed
             self.dir = Directions.RIGHT
         sector = math.pi/16
         if abs(angle) < sector or abs(angle) > sector*15:
@@ -330,4 +328,8 @@ class Player(Actor):
             GunAnimation.current_still = 1
         elif (sector*5 < angle < sector*7) or (sector*11 < angle < sector*13):
             GunAnimation.current_still = 2
+        elif (sector < -angle < sector*3) or (sector*13 < -angle < sector*15):
+            GunAnimation.current_still = 3
+        elif (sector*3 < -angle < sector*5) or (sector*11 < -angle < sector*13):
+            GunAnimation.current_still = 4
         #self.dirs[self.dir][self.weapon.type].
