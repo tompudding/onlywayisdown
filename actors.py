@@ -377,8 +377,7 @@ class Player(Actor):
     width = 24/Actor.overscan
     height = 32/Actor.overscan
     jump_amount = 0.4
-    shoulder_pos = Point(10,21)
-    gun_pos = Point(14,21)
+    shoulder_pos = Point(10,21).to_float()
     weapon_types = WeaponTypes.all
     fps = 8
 
@@ -386,10 +385,11 @@ class Player(Actor):
         self.weapon = Pistol(self)
         self.still = True
         self.angle = 0
+        self.gun_pos = Point(14,21)
         super(Player,self).__init__(map,pos)
 
     def GunPos(self):
-        return self.pos + self.gun_pos/globals.tile_dimensions
+        return self.pos + self.gun_pos[self.dir].to_float()/globals.tile_dimensions
 
     def MouseMotion(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
@@ -404,14 +404,19 @@ class Player(Actor):
         sector = math.pi/16
         if abs(angle) < sector or abs(angle) > sector*15:
             GunAnimation.current_still = 0
+            self.gun_pos = {Directions.LEFT : Point(2,22),Directions.RIGHT : Point(23,22)}
         elif (sector*3 < angle < sector*5) or (sector*13 < angle < sector*15):
             GunAnimation.current_still = 1
+            self.gun_pos = {Directions.LEFT : Point(-4,28),Directions.RIGHT : Point(24,28)}
         elif (sector*5 < angle < sector*7) or (sector*11 < angle < sector*13):
             GunAnimation.current_still = 2
+            self.gun_pos = {Directions.LEFT : Point(4,30),Directions.RIGHT : Point(18,32)}
         elif (sector < -angle < sector*3) or (sector*13 < -angle < sector*15):
             GunAnimation.current_still = 3
+            self.gun_pos = {Directions.LEFT : Point(-4,15),Directions.RIGHT : Point(23,16)}
         elif (sector*3 < -angle < sector*5) or (sector*11 < -angle < sector*13):
             GunAnimation.current_still = 4
+            self.gun_pos = {Directions.LEFT : Point(1,13),Directions.RIGHT : Point(20,13)}
         self.angle = angle
         #self.dirs[self.dir][self.weapon.type].
 
@@ -470,6 +475,7 @@ class Bullet(Actor):
             #remove it from things
             self.map.RemoveActor(self.pos.to_int(),self)
             self.map.DeleteActor(self)
+            return
         self.Move(t)
 
     def Move(self,t):
@@ -527,6 +533,8 @@ class Bullet(Actor):
         self.destroyed = True
     
     def TriggerCollide(self,target):
+        if self.destroyed:
+            return
         if target != None:
             target.Damage(self.damage_amount)
         self.Destroy()
