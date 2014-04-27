@@ -14,12 +14,16 @@ import random
 class Viewpos(object):
     follow_threshold = 0
     max_away = Point(100,20)
+    shake_radius = 4
     def __init__(self,point):
-        self.pos = point
+        self._pos = point
         self.NoTarget()
         self.follow = None
         self.follow_locked = False
         self.t = 0
+        self.shake_end = None
+        self.shake_duration = 1
+        self.shake = Point(0,0)
 
     def NoTarget(self):
         self.target        = None
@@ -28,9 +32,17 @@ class Viewpos(object):
         self.target_time   = None
         self.start_time    = None
 
+    @property
+    def pos(self):
+        return self._pos + self.shake
+
     def Set(self,point):
-        self.pos = point.to_int()
+        self._pos = point.to_int()
         self.NoTarget()
+
+    def ScreenShake(self,duration):
+        self.shake_end = globals.time + duration
+        self.shake_duration = float(duration)
 
     def SetTarget(self,point,t,rate=2,callback = None):
         #Don't fuck with the view if the player is trying to control it
@@ -39,8 +51,8 @@ class Viewpos(object):
         self.follow_start  = 0
         self.follow_locked = False
         self.target        = point.to_int()
-        self.target_change = self.target - self.pos
-        self.start_point   = self.pos
+        self.target_change = self.target - self._pos
+        self.start_point   = self._pos
         self.start_time    = t
         self.duration      = self.target_change.length()/rate
         self.callback      = callback
@@ -59,11 +71,8 @@ class Viewpos(object):
     def HasTarget(self):
         return self.target != None
 
-    def Get(self):
-        return self.pos
-
     def Skip(self):
-        self.pos = self.target
+        self._pos = self.target
         self.NoTarget()
         if self.callback:
             self.callback(self.t)
@@ -73,17 +82,27 @@ class Viewpos(object):
         try:
             return self.update(t)
         finally:
-            self.pos = self.pos.to_int()
+            self._pos = self._pos.to_int()
 
     def update(self,t):
         self.t = t
+        
+        if self.shake_end:
+            if t >= self.shake_end:
+                self.shake_end = None
+                self.shake = Point(0,0)
+            else:
+                left = (self.shake_end - t)/self.shake_duration
+                radius = left*self.shake_radius
+                self.shake = Point(random.random()*radius,random.random()*radius)
+
         if self.follow:
             #We haven't locked onto it yet, so move closer, and lock on if it's below the threshold
             fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.2)
             if not fpos:
                 return
             target = fpos - (globals.screen*0.5).to_int()
-            diff = target - self.pos
+            diff = target - self._pos
             #print diff.SquareLength(),self.follow_threshold
             direction = diff.direction()
             
@@ -94,12 +113,12 @@ class Viewpos(object):
             #adjust = adjust.to_int()
             if adjust.x == 0 and adjust.y == 0:
                 adjust = direction
-            self.pos += adjust
+            self._pos += adjust
             return
                 
         elif self.target:
             if t >= self.target_time:
-                self.pos = self.target
+                self._pos = self.target
                 self.NoTarget()
                 if self.callback:
                     self.callback(t)
@@ -109,7 +128,7 @@ class Viewpos(object):
             else:
                 partial = float(t-self.start_time)/self.duration
                 partial = partial*partial*(3 - 2*partial) #smoothstep
-                self.pos = (self.start_point + (self.target_change*partial)).to_int()
+                self._pos = (self.start_point + (self.target_change*partial)).to_int()
 
 
 class TileTypes:
@@ -357,7 +376,7 @@ class GameView(ui.RootElement):
         #print 'mouse',pos
         #if self.selected_player != None:
         #    self.selected_player.MouseMotion()
-        screen_pos = self.viewpos.Get() + pos
+        screen_pos = self.viewpos.pos + pos
         self.mode.MouseMotion(screen_pos,rel)
 
         return super(GameView,self).MouseMotion(pos,rel,handled)

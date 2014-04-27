@@ -159,6 +159,9 @@ class Fist(Weapon):
         else:
             return Point(0,0)
         
+class ZombieBite(Fist):
+    duration = 1000
+    
 
 class Axe(Weapon):
     duration = 900
@@ -620,6 +623,8 @@ class Player(Actor):
 
     def Damage(self,amount,pos):
         print 'player damaged by',amount
+        globals.current_view.viewpos.ScreenShake(500)
+        super(Player,self).Damage(amount,pos)
 
 class Bullet(Actor):
     texture = 'bullet'
@@ -747,11 +752,10 @@ class Zombie(Actor):
     fps = 24
     initial_health = 40
     def __init__(self,map,pos):
-        self.weapon = Fist(self)
+        self.weapon = ZombieBite(self)
         self.speed = 0.02 + random.random()*0.01
         self.random_walk_end = None
         super(Zombie,self).__init__(map,pos)
-    
 
     def Update(self,t):
         #print 'zombie update',t
@@ -772,6 +776,10 @@ class Zombie(Actor):
                     self.move_direction = Point(self.speed,0)
                 else:
                     self.move_direction = Point(-self.speed,0)
+                if not self.attacking and abs(diff.x) < 1:
+                    print 'x',self.attacking
+                    self.weapon.Fire(None)
+                    self.attacking = True
         super(Zombie,self).Update(t)
 
     def ResetWalked(self):
