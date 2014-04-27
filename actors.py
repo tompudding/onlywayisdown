@@ -496,7 +496,7 @@ class Player(Actor):
         self.bullets = 6
         self.info_box = ui.Box(parent = globals.screen_root,
                                pos = Point(0,0),
-                               tr = Point(1,0.07),
+                               tr = Point(1,0.08),
                                colour = (0,0,0,0.7))
         self.info_box.health_text = ui.TextBox(self.info_box,
                                                bl = Point(0.8,0),
@@ -515,6 +515,7 @@ class Player(Actor):
                                                scale = 3,
                                                alignment = drawing.texture.TextAlignments.CENTRE)
         self.inv_quads = [drawing.Quad(globals.screen_texture_buffer,tc = globals.atlas.TextureSpriteCoords('empty.png')) for i in xrange(3)]
+        self.sel_quads = [drawing.Quad(globals.screen_texture_buffer,tc = globals.atlas.TextureSpriteCoords('selected.png')) for i in xrange(3)]
         box_size = 12
         sep_x = int((self.info_box.absolute.size.x*0.15 - box_size*3)/4)
         sep_y = int((self.info_box.absolute.size.y - box_size)/2)
@@ -524,7 +525,10 @@ class Player(Actor):
             tr = bl + Point(box_size,box_size)
             print bl,tr
             self.inv_quads[i].SetVertices(bl,tr,9000)
+            self.sel_quads[i].SetVertices(bl,tr,9001)
             self.inv_quads[i].Enable()
+            self.sel_quads[i].Disable()
+        
 
         self.inventory = [None,None,None]
         self.num_items = 0
@@ -550,8 +554,11 @@ class Player(Actor):
         self.Select(self.current_item + 1)
 
     def Select(self,index):
+        self.sel_quads[self.current_item].Disable()
         if not self.attacking and self.inventory[index]:
             self.weapon = self.inventory[index]
+            self.current_item = index
+            self.sel_quads[self.current_item].Enable()
 
     def GunPos(self):
         return self.pos + self.gun_pos[self.dir].to_float()/globals.tile_dimensions
