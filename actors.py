@@ -213,7 +213,6 @@ class Actor(object):
             tr = bl + self.splat_size
             bl = bl.to_int()
             tr = tr.to_int()
-            print 'yoyo',bl,tr
             self.splat_quad.SetVertices(bl,tr,5)
 
     def Facing(self):

@@ -13,7 +13,7 @@ import random
 
 class Viewpos(object):
     follow_threshold = 0
-    max_away = Point(100,60)
+    max_away = Point(100,20)
     def __init__(self,point):
         self.pos = point
         self.NoTarget()
@@ -120,6 +120,7 @@ class TileTypes:
     ROCK                = 5
     LADDER              = 6
     LADDER_TOP          = 7
+    TILE                = 8
     Impassable          = set((GRASS,ROCK))
     Ladders             = set((LADDER_TOP,LADDER))
     LadderTops          = set((LADDER_TOP,))
@@ -130,6 +131,7 @@ class TileData(object):
                      TileTypes.ZOMBIE        : 'grass.png',
                      TileTypes.ROCK          : 'rock.png',
                      TileTypes.LADDER        : 'ladder.png',
+                     TileTypes.TILE          : 'tile.png',
                      TileTypes.LADDER_TOP    : 'ladder.png'}
 
     def __init__(self,type,pos):
@@ -199,6 +201,7 @@ class GameMap(object):
     input_mapping = {' ' : TileTypes.AIR,
                      '-' : TileTypes.GRASS,
                      '.' : TileTypes.ROCK,
+                     't' : TileTypes.TILE,
                      'l' : TileTypes.LADDER,
                      'L' : TileTypes.LADDER_TOP,
                      'p' : TileTypes.PLAYER,
