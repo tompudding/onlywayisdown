@@ -231,6 +231,9 @@ class Actor(object):
         self.dead = False
         self.attacking = False
 
+    def Collect(self,owner):
+        pass
+
     def Damage(self,amount,pos):
         self.splat_pos = pos - self.pos
         self.splat_end = globals.time + 1000
@@ -325,7 +328,8 @@ class Actor(object):
         self.Move(t)
 
     def TriggerCollide(self,target):
-        pass
+        if target:
+            target.Collect(self)
 
     def Move(self,t):
         if self.last_update == None:
@@ -552,8 +556,6 @@ class Player(Actor):
         self.current_item = 0
         self.attacking = False
         self.AddItem(Fist(self))
-        self.AddItem(Axe(self))
-        self.AddItem(Pistol(self))
         
         self.weapon = self.inventory[self.current_item]
         self.still = True
@@ -568,7 +570,7 @@ class Player(Actor):
         item.SetIconQuad(self.inv_quads[self.num_items])
         self.num_items += 1
         #auto select the new item
-        self.Select(self.current_item + 1)
+        self.Select(self.num_items-1)
 
     def Select(self,index):
         if not self.attacking and self.inventory[index]:
@@ -753,6 +755,74 @@ class Bullet(Actor):
             target.Damage(self.damage_amount,pos if pos != None else self.pos)
         self.Destroy()
 
+class Collectable(Actor):
+    def __init__(self,map,pos):
+        self.map  = map
+        self.pos = None
+       
+        self.tc = globals.atlas.TextureSpriteCoords(self.texture)
+        self.quad = drawing.Quad(globals.quad_buffer,tc = self.tc)
+        self.quad.Enable()
+        self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
+        
+        self.SetPos(pos)
+        self.destroyed = False
+
+    def SetPos(self,pos):
+        if self.pos != None:
+            self.map.RemoveActor(self.pos.to_int(),self)
+        
+        self.pos = pos
+        self.map.AddActor(self.pos.to_int(),self)
+        over_size = Point(self.width,self.height)*self.overscan
+        extra = Point(self.width,self.height)*(self.overscan-Point(1,1))
+        bl = (pos*globals.tile_dimensions) - extra/2
+        tr = bl + over_size
+        bl = bl.to_int()
+        tr = tr.to_int()
+        self.quad.SetVertices(bl,tr,4)
+
+
+    def Update(self,t):
+        if self.destroyed:
+            #remove it from things
+            self.map.RemoveActor(self.pos.to_int(),self)
+            self.map.DeleteActor(self)
+            self.quad.Delete()
+
+    def Collect(self,owner):
+        if isinstance(owner,Player):
+            owner.AddItem(Axe(owner))
+        self.destroyed = True
+
+    def Move(self,t):
+        pass
+
+    def Click(self,pos,button):
+        pass
+
+    def GetPos(self):
+        return self.pos
+
+    def ResetWalked(self):
+        pass
+
+    def Destroy(self):
+        self.quad.Delete()
+        self.destroyed = True
+    
+    def TriggerCollide(self,target,pos = None):
+        if self.destroyed:
+            return
+        if target != None:
+            target.Damage(self.damage_amount,pos if pos != None else self.pos)
+        self.Destroy()
+
+class AxeItem(Collectable):
+    texture = 'axe_item.png'
+    width = 6
+    height = 19
+
 class Zombie(Actor):
     texture = 'zombie'
     overscan = Point(1.8,1.05)
@@ -782,7 +852,7 @@ class Zombie(Actor):
             if (abs(diff.x) > 10 or abs(diff.y) > 2):
                 #Too far away, try a random walk
                 self.move_direction = random.choice((Point(self.speed,0),Point(-self.speed,0)))
-                self.random_walk_end = globals.time + random.gauss(2000,1)
+                self.random_walk_end = globals.time + random.gauss(800,1)
                 self.close_trigger = None
             else:
                 #walk towards the player

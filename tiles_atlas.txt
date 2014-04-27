@@ -80,6 +80,7 @@ resource/sprites/axe.png:tiles_atlas_0.png:208:948.0:12:12
 resource/sprites/fist.png:tiles_atlas_0.png:220:948.0:12:12
 resource/sprites/pistol.png:tiles_atlas_0.png:232:948.0:12:12
 resource/sprites/selected.png:tiles_atlas_0.png:244:948.0:12:12
+resource/sprites/axe_item.png:tiles_atlas_0.png:1016:973.0:6:19
 resource/sprites/empty.png:tiles_atlas_0.png:256:950.0:10:10
-resource/sprites/splat.png:tiles_atlas_0.png:1020:1020.0:4:4
-resource/sprites/bullet.png:tiles_atlas_0.png:1020:1019.0:1:1
+resource/sprites/splat.png:tiles_atlas_0.png:1016:969.0:4:4
+resource/sprites/bullet.png:tiles_atlas_0.png:1016:968.0:1:1

@@ -290,6 +290,9 @@ class GameMap(object):
                     if self.input_mapping[tile] == TileTypes.ZOMBIE:
                         zombie = actors.Zombie(self,Point(x+0.2,y))
                         self.actors.append(zombie)
+                    if self.input_mapping[tile] == TileTypes.AXE:
+                        axe = actors.AxeItem(self,Point(x+0.2,y))
+                        self.actors.append(axe)
                     #except KeyError:
                     #    raise globals.types.FatalError('Invalid map data')
                 y -= 1
