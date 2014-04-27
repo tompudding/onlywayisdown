@@ -176,6 +176,7 @@ class Actor(object):
         self.current_sound = None
         self.jumping = False
         self.jumped = False
+        self.ladder = False
         self.ResetWalked()
         
         self.attacking = False
@@ -248,6 +249,9 @@ class Actor(object):
     def TriggerCollide(self,target):
         pass
 
+    def LadderMovement(self):
+        fd
+
     def Move(self,t):
         if self.last_update == None:
             self.last_update = globals.time
@@ -263,8 +267,17 @@ class Actor(object):
                 self.move_speed.y += self.jump_amount
                 self.jumped = True
             self.move_speed.x *= 0.8*(1-(elapsed/1000.0))
+
+        if self.ladder and not self.on_ladder():
+            self.ladder = False
+
+        if self.ladder or (self.on_ladder() and self.move_direction.y < 0):
+            #no gravity on the ladder
+            self.ladder = True
+            self.move_speed.y = self.move_direction.y
+        else:
+            self.move_speed.y += globals.gravity*elapsed*0.03
         
-        self.move_speed.y += globals.gravity*elapsed*0.03
         amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
         #print self.move_speed,amount
         self.walked += amount.x
@@ -349,7 +362,7 @@ class Actor(object):
                 target_y = 0
             target_tile_y = self.map.data[int(pos.x)][int(target_y)]
             
-            if target_tile_y.type in game_view.TileTypes.Impassable | game_view.TileTypes.Ladders:
+            if target_tile_y.type in game_view.TileTypes.Impassable or not self.ladder and target_tile_y.type in game_view.TileTypes.LadderTops:
                 if amount.y > 0:
                     amount.y = (int(target_y)-pos.y-self.threshold)
                 else:

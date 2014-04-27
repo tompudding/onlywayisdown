@@ -119,15 +119,18 @@ class TileTypes:
     ZOMBIE              = 4
     ROCK                = 5
     LADDER              = 6
+    LADDER_TOP          = 7
     Impassable          = set((GRASS,ROCK))
-    Ladders             = set((LADDER,))
+    Ladders             = set((LADDER_TOP,LADDER))
+    LadderTops          = set((LADDER_TOP,))
 
 class TileData(object):
     texture_names = {TileTypes.GRASS         : 'grass.png',
                      TileTypes.PLAYER        : 'grass.png',
                      TileTypes.ZOMBIE        : 'grass.png',
                      TileTypes.ROCK          : 'rock.png',
-                     TileTypes.LADDER        : 'ladder.png',}
+                     TileTypes.LADDER        : 'ladder.png',
+                     TileTypes.LADDER_TOP    : 'ladder.png'}
 
     def __init__(self,type,pos):
         self.pos  = pos
@@ -197,6 +200,7 @@ class GameMap(object):
                      '-' : TileTypes.GRASS,
                      '.' : TileTypes.ROCK,
                      'l' : TileTypes.LADDER,
+                     'L' : TileTypes.LADDER_TOP,
                      'p' : TileTypes.PLAYER,
                      'z' : TileTypes.ZOMBIE}
     def __init__(self,name,parent):
