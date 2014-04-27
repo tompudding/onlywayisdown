@@ -29,14 +29,16 @@ class Animation(object):
 
         self.start = 0
         self.tcs = []
+        flip = False
         for i in xrange(self.num_frames):
             try:
                 self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_%s_%d.png' % (self.texture,item,name,i)))
             except KeyError:
                 self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_right_%d.png' % (self.texture,item,i)))
+                flip = True
             
         new_tcs = range(self.num_frames)
-        if self.name != 'right':
+        if self.name != 'right' and flip:
             for i in xrange(self.num_frames):
                 #flip the x-coords...
                 j = self.num_frames - 1 - i
@@ -322,12 +324,15 @@ class Player(Actor):
 
     def __init__(self,map,pos):
         self.weapon = Pistol(self)
+        self.still = True
         super(Player,self).__init__(map,pos)
 
     def MouseMotion(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
         distance,angle = cmath.polar(complex(diff.x,diff.y))
         #print distance,angle
+        if not self.still:
+            return
         if abs(angle)*2 > math.pi:
             self.dir = Directions.LEFT
         else:
@@ -360,8 +365,11 @@ class Zombie(Actor):
 
     def Update(self,t):
         #print 'zombie update',t
-        #Try moving right
-        self.move_direction = Point(self.speed,0)
+        #Try moving toward the player
+        if self.map.player.pos.x > self.pos.x:
+            self.move_direction = Point(self.speed,0)
+        else:
+            self.move_direction = Point(-self.speed,0)
         super(Zombie,self).Update(t)
 
     def ResetWalked(self):
