@@ -194,7 +194,10 @@ class Actor(object):
         if self.health <= 0:
             self.dead = True
             self.splat_quad.Delete()
-            self.quad.SetTextureCoordinates(self.dead_tc)
+            tc = self.dead_tc
+            if self.dir == Directions.RIGHT:
+                tc = [tc[3],tc[2],tc[1],tc[0]]
+            self.quad.SetTextureCoordinates(tc)
 
     def RemoveFromMap(self):
         if self.pos != None:
