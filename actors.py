@@ -30,7 +30,10 @@ class Animation(object):
         self.start = 0
         self.tcs = []
         for i in xrange(self.num_frames):
-            self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_right_%d.png' % (self.texture,item,i)))
+            try:
+                self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_%s_%d.png' % (self.texture,item,name,i)))
+            except KeyError:
+                self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_right_%d.png' % (self.texture,item,i)))
             
         new_tcs = range(self.num_frames)
         if self.name != 'right':
@@ -148,13 +151,12 @@ class Actor(object):
         self.move_direction = Point(0,0)
         for dir,name in self.dirsa:
             self.dirs[dir] = {}
-            for weapon_type in WeaponTypes.all:
+            for weapon_type in self.weapon_types:
                 AnimationType = GunAnimation if weapon_type in WeaponTypes.guns else Animation
                 self.dirs[dir][weapon_type] = AnimationType(self.texture,name,WeaponTypes.names[weapon_type])
 
         #self.dirs = dict((dir,globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))) for (dir,name) in self.dirs)
         self.dir = Directions.RIGHT
-        self.weapon = Pistol(self)
         self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir][self.weapon.type].GetTc(0,0))
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
         self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
@@ -312,6 +314,11 @@ class Player(Actor):
     height = 32/Actor.overscan
     jump_amount = 0.4
     shoulder_pos = Point(10,21)
+    weapon_types = WeaponTypes.all
+
+    def __init__(self,map,pos):
+        self.weapon = Pistol(self)
+        super(Player,self).__init__(map,pos)
 
     def MouseMotion(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
@@ -333,3 +340,14 @@ class Player(Actor):
         elif (sector*3 < -angle < sector*5) or (sector*11 < -angle < sector*13):
             GunAnimation.current_still = 4
         #self.dirs[self.dir][self.weapon.type].
+
+class Zombie(Actor):
+    texture = 'zombie'
+    width = 24/Actor.overscan
+    height = 32/Actor.overscan
+    jump_amount = 0
+    weapon_types = [WeaponTypes.FIST]
+    def __init__(self,map,pos):
+        self.weapon = Fist(self)
+        super(Zombie,self).__init__(map,pos)
+    

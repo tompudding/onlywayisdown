@@ -116,11 +116,13 @@ class TileTypes:
     AIR                 = 1
     GRASS               = 2
     PLAYER              = 3
+    ZOMBIE              = 4
     Impassable          = set((GRASS,))
 
 class TileData(object):
     texture_names = {TileTypes.GRASS         : 'grass.png',
-                     TileTypes.PLAYER        : 'grass.png',}
+                     TileTypes.PLAYER        : 'grass.png',
+                     TileTypes.ZOMBIE        : 'grass.png'}
 
     def __init__(self,type,pos):
         self.pos  = pos
@@ -171,14 +173,15 @@ class TileDataAir(TileData):
         pass
 
 def TileDataFactory(map,type,pos):
-    if type in (TileTypes.AIR,TileTypes.PLAYER):
+    if type in (TileTypes.AIR,TileTypes.PLAYER,TileTypes.ZOMBIE):
         return TileDataAir(type,pos)
     return TileData(type,pos)
 
 class GameMap(object):
     input_mapping = {' ' : TileTypes.AIR,
                      '.' : TileTypes.GRASS,
-                     'p' : TileTypes.PLAYER,}
+                     'p' : TileTypes.PLAYER,
+                     'z' : TileTypes.ZOMBIE}
     def __init__(self,name,parent):
         self.size   = Point(128,92)
         self.data   = [[TileTypes.AIR for i in xrange(self.size.y)] for j in xrange(self.size.x)]
@@ -222,6 +225,9 @@ class GameMap(object):
                         if self.input_mapping[tile] == TileTypes.PLAYER:
                             self.player = actors.Player(self,Point(x+0.2,y))
                             self.actors.append(self.player)
+                        if self.input_mapping[tile] == TileTypes.ZOMBIE:
+                            zombie = actors.Zombie(self,Point(x+0.2,y))
+                            self.actors.append(zombie)
                     #except KeyError:
                     #    raise globals.types.FatalError('Invalid map data')
                 y -= 1
