@@ -114,11 +114,13 @@ class Weapon(object):
         return True if t > self.end else False
 
 class Gun(Weapon):
+    wavery = 0.2
     def Fire(self,pos):
         self.end = globals.time + self.duration
         
         print 'boom!'
-        bullet = Bullet(self.player.map,self.player.GunPos(),self.player.angle,self.player)
+        fire_angle = self.player.angle + (random.random()-0.5)*self.wavery
+        bullet = Bullet(self.player.map,self.player.GunPos(),fire_angle,self.player)
         self.player.map.CreateActor(bullet)
 
 class Fist(Weapon):
@@ -502,7 +504,7 @@ class Bullet(Actor):
     texture = 'bullet'
     width = 1
     height = 1
-    damage_amount = 10
+    damage_amount = 30
     speed = 1
 
     def __init__(self,map,pos,angle,launcher):
