@@ -217,8 +217,11 @@ class TileDataAir(TileData):
     def Interact(self,player):
         pass
 
+
 def TileDataFactory(map,type,pos):
-    if type in (TileTypes.AIR,TileTypes.PLAYER,TileTypes.ZOMBIE):
+    if type in (TileTypes.AIR,TileTypes.PLAYER):
+        return TileDataAir(type,pos)
+    if type == TileTypes.ZOMBIE and naked_zombie:
         return TileDataAir(type,pos)
     return TileData(type,pos)
 
@@ -235,6 +238,7 @@ class GameMap(object):
                      'x' : TileTypes.AXE,
                      'z' : TileTypes.ZOMBIE}
     def __init__(self,name,parent):
+        global naked_zombie
         self.size   = Point(128,92)
         self.data   = [[TileTypes.AIR for i in xrange(self.size.y)] for j in xrange(self.size.x)]
         self.object_cache = {}
@@ -265,21 +269,27 @@ class GameMap(object):
                 for inv_x,tile in enumerate(line[::-1]):
                     x = self.size.x-1-inv_x
                     #try:
-                    if 1:
-                        td = TileDataFactory(self,self.input_mapping[tile],Point(x,y))
-                        for tile_x in xrange(td.size.x):
-                            for tile_y in xrange(td.size.y):
-                                if self.data[x+tile_x][y+tile_y] != TileTypes.AIR:
-                                    self.data[x+tile_x][y+tile_y].Delete()
-                                    self.data[x+tile_x][y+tile_y] = TileTypes.AIR
-                                if self.data[x+tile_x][y+tile_y] == TileTypes.AIR:
-                                    self.data[x+tile_x][y+tile_y] = td
-                        if self.input_mapping[tile] == TileTypes.PLAYER:
-                            self.player = actors.Player(self,Point(x+0.2,y))
-                            self.actors.append(self.player)
-                        if self.input_mapping[tile] == TileTypes.ZOMBIE:
-                            zombie = actors.Zombie(self,Point(x+0.2,y))
-                            self.actors.append(zombie)
+                    if self.input_mapping[tile] == TileTypes.ZOMBIE:
+                        print x,y,self.data[x+1][y].name
+                        TileData.texture_names[TileTypes.ZOMBIE] = self.data[x+1][y].name
+                        if self.data[x+1][y].name == 'air':
+                            naked_zombie = True
+                        else:
+                            naked_zombie = False
+                    td = TileDataFactory(self,self.input_mapping[tile],Point(x,y))
+                    for tile_x in xrange(td.size.x):
+                        for tile_y in xrange(td.size.y):
+                            if self.data[x+tile_x][y+tile_y] != TileTypes.AIR:
+                                self.data[x+tile_x][y+tile_y].Delete()
+                                self.data[x+tile_x][y+tile_y] = TileTypes.AIR
+                            if self.data[x+tile_x][y+tile_y] == TileTypes.AIR:
+                                self.data[x+tile_x][y+tile_y] = td
+                    if self.input_mapping[tile] == TileTypes.PLAYER:
+                        self.player = actors.Player(self,Point(x+0.2,y))
+                        self.actors.append(self.player)
+                    if self.input_mapping[tile] == TileTypes.ZOMBIE:
+                        zombie = actors.Zombie(self,Point(x+0.2,y))
+                        self.actors.append(zombie)
                     #except KeyError:
                     #    raise globals.types.FatalError('Invalid map data')
                 y -= 1
