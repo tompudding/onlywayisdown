@@ -234,6 +234,9 @@ class GameMap(object):
                 if y < 0:
                     break
 
+    def Update(self,t):
+        for actor in self.actors:
+            actor.Update(t)
 
     def AddObject(self,obj):
         self.object_list.append(obj)
@@ -287,7 +290,7 @@ class GameView(ui.RootElement):
         if self.viewpos.pos.y > (self.map.world_size.y - globals.screen.y):
             self.viewpos.pos.y = (self.map.world_size.y - globals.screen.y)
 
-        self.map.player.Update(t)
+        self.map.Update(t)
 
     def GameOver(self):
         self.game_over = True
