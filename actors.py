@@ -472,9 +472,14 @@ class Actor(object):
         self.SetPos(self.pos + amount)
 
     def Click(self,pos,button):
-        if self.still and not self.attacking:
-            self.weapon.Fire(pos)
-            self.attacking = True
+        if button == 1:
+            if self.still and not self.attacking:
+                self.weapon.Fire(pos)
+                self.attacking = True
+        elif button == 4:
+            self.SelectNext()
+        elif button == 5:
+            self.SelectPrev()
 
     def GetPos(self):
         return self.pos
@@ -554,11 +559,17 @@ class Player(Actor):
         self.Select(self.current_item + 1)
 
     def Select(self,index):
-        self.sel_quads[self.current_item].Disable()
         if not self.attacking and self.inventory[index]:
+            self.sel_quads[self.current_item].Disable()
             self.weapon = self.inventory[index]
             self.current_item = index
             self.sel_quads[self.current_item].Enable()
+
+    def SelectNext(self):
+        self.Select((self.current_item + 1)%self.num_items)
+
+    def SelectPrev(self):
+        self.Select((self.current_item + self.num_items - 1 )%self.num_items)
 
     def GunPos(self):
         return self.pos + self.gun_pos[self.dir].to_float()/globals.tile_dimensions
@@ -771,7 +782,7 @@ class Zombie(Actor):
         if rel_pos.y < 0.65:
             #Zombies take less damage below the head area
             amount *= 0.2
-        elif 0.65 <= rel_pos.y < 0.93:
+        elif 0.75 <= rel_pos.y < 0.92:
             #headshot!
             amount *= 1.5
         pos.x = self.pos.x + (pos.x-self.pos.x)*0.5
