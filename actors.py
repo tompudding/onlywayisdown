@@ -434,12 +434,20 @@ class Player(Actor):
         self.still = True
         self.angle = 0
         self.gun_pos = Point(14,21)
+        self.mouse_pos = Point(0,0)
         super(Player,self).__init__(map,pos)
 
     def GunPos(self):
         return self.pos + self.gun_pos[self.dir].to_float()/globals.tile_dimensions
 
     def MouseMotion(self,pos,rel):
+        self.mouse_pos = pos
+
+    def Update(self,t):
+        self.UpdateMouse(self.mouse_pos,None)
+        super(Player,self).Update(t)
+
+    def UpdateMouse(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
         distance,angle = cmath.polar(complex(diff.x,diff.y))
         #print distance,angle
