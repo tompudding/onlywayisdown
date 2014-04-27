@@ -131,7 +131,7 @@ class GameMode(Mode):
         self.parent.map.player.MouseMotion(pos,rel)
 
 class GameOver(Mode):
-    blurb = "GAME OVER"
+    blurb = "GAME OVER : you were eaten by zombies"
     def __init__(self,parent):
         self.parent          = parent
         self.blurb           = self.blurb
@@ -145,7 +145,7 @@ class GameOver(Mode):
                                       colour = (0,0,0,0.6))
         
         bl = self.parent.GetRelative(Point(0,0))
-        tr = bl + self.parent.GetRelative(globals.screen)
+        tr = bl + self.parent.GetRelative(Point(globals.screen.x,globals.screen.y*0.5))
         self.blurb_text = ui.TextBox(parent = globals.screen_root,
                                      bl     = bl         ,
                                      tr     = tr         ,

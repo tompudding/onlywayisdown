@@ -8,6 +8,7 @@ import random
 import pygame
 import cmath
 import math
+import modes
 
 class Directions:
     UP    = 0
@@ -212,7 +213,7 @@ class Actor(object):
         try:
             self.dead_tc = globals.atlas.TextureSpriteCoords('%s_dead.png' % self.texture)
         except:
-            self.dead_tc = None
+            self.dead_tc = self.dirs[self.dir][self.weapon.type].GetTc(0,0)
         self.splat_quad = drawing.Quad(globals.quad_buffer,tc = self.splat_tc)
         self.splat_size = globals.atlas.SubimageSprite('splat.png').size
         self.splat_quad.Disable()
@@ -245,6 +246,8 @@ class Actor(object):
 
     def AdjustHealth(self,amount):
         self.health += amount
+        if self.health < 0:
+            self.health = 0
 
     def RemoveFromMap(self):
         if self.pos != None:
@@ -581,6 +584,8 @@ class Player(Actor):
         self.mouse_pos = pos
 
     def Update(self,t):
+        if self.dead:
+            globals.current_view.mode = modes.GameOver(globals.current_view)
         self.UpdateMouse(self.mouse_pos,None)
         super(Player,self).Update(t)
 
