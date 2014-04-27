@@ -165,6 +165,10 @@ class Actor(object):
         self.dir = Directions.RIGHT
         self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir][self.weapon.type].GetTc(0,0))
         self.splat_tc = globals.atlas.TextureSpriteCoords('splat.png')
+        try:
+            self.dead_tc = globals.atlas.TextureSpriteCoords('%s_dead.png' % self.texture)
+        except:
+            self.dead_tc = None
         self.splat_quad = drawing.Quad(globals.quad_buffer,tc = self.splat_tc)
         self.splat_size = globals.atlas.SubimageSprite('splat.png').size
         self.splat_quad.Disable()
@@ -178,23 +182,30 @@ class Actor(object):
         self.jumped = False
         self.ladder = False
         self.ResetWalked()
-        
+        self.health = self.initial_health
+        self.dead = False
         self.attacking = False
 
     def Damage(self,amount,pos):
         self.splat_pos = pos - self.pos
         self.splat_end = globals.time + 1000
         self.splat_quad.Enable()
-        print 'sp',self.splat_pos
+        self.health -= amount
+        if self.health <= 0:
+            self.dead = True
+            self.splat_quad.Delete()
+            self.quad.SetTextureCoordinates(self.dead_tc)
 
-    def SetPos(self,pos):
+    def RemoveFromMap(self):
         if self.pos != None:
             bl = self.pos.to_int()
             tr = (self.pos+self.size).to_int()
             for x in xrange(bl.x,tr.x+1):
                 for y in xrange(bl.y,tr.y+1):
                     self.map.RemoveActor(Point(x,y),self)
-        
+
+    def SetPos(self,pos):
+        self.RemoveFromMap()
         self.pos = pos
         bl = self.pos.to_int()
         tr = (self.pos+self.size).to_int()
@@ -247,6 +258,10 @@ class Actor(object):
         return self.above_ladder() or self.below_ladder()
 
     def Update(self,t):
+        if self.dead:
+            self.RemoveFromMap()
+            self.map.DeleteActor(self)
+            return
         if self.attacking:
             finished = self.weapon.Update(t)
             if finished:
@@ -428,6 +443,7 @@ class Player(Actor):
     shoulder_pos = Point(10,21).to_float()
     weapon_types = WeaponTypes.all
     fps = 8
+    initial_health = 100
 
     def __init__(self,map,pos):
         self.weapon = Pistol(self)
@@ -603,6 +619,7 @@ class Zombie(Actor):
     jump_amount = 0
     weapon_types = [WeaponTypes.FIST]
     fps = 24
+    initial_health = 40
     def __init__(self,map,pos):
         self.weapon = Fist(self)
         self.speed = 0.02 + random.random()*0.01
@@ -622,5 +639,13 @@ class Zombie(Actor):
         self.walked = random.random()
 
     def Damage(self,amount,pos):
-        print 'Zombie damaged by',amount,pos
+        rel_pos = (pos-self.pos)/self.size
+        if rel_pos.y < 0.65:
+            #Zombies take less damage below the head area
+            amount *= 0.2
+        elif 0.65 <= rel_pos.y < 0.93:
+            #headshot!
+            amount *= 1.5
+        pos.x = self.pos.x + (pos.x-self.pos.x)*0.5
+        print 'zd',amount
         super(Zombie,self).Damage(amount,pos)
