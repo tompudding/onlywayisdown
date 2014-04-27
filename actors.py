@@ -887,8 +887,8 @@ class HealthItem(Collectable):
 
 class EndItem(Collectable):
     texture = 'end_item.png'
-    width = 20
-    height = 14
+    width = 27
+    height = 25
 
     def Collect(self,owner):
         if isinstance(owner,Player) and not self.destroyed:
