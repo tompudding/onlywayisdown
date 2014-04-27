@@ -307,4 +307,14 @@ class GameView(ui.RootElement):
         else:
             return False,False
 
+    def MouseMotion(self,pos,rel,handled):
+        #print 'mouse',pos
+        #if self.selected_player != None:
+        #    self.selected_player.MouseMotion()
+        screen_pos = self.viewpos.Get() + pos
+        self.mode.MouseMotion(screen_pos,rel)
+
+        return super(GameView,self).MouseMotion(pos,rel,handled)
+
+
 

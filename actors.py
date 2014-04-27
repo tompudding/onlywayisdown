@@ -6,6 +6,8 @@ import os
 import game_view
 import random
 import pygame
+import cmath
+import math
 
 class Directions:
     UP    = 0
@@ -49,12 +51,47 @@ class Animation(object):
         frame = int((elapsed*self.fps)%self.num_frames)
         return self.tcs[frame]
 
+class GunAnimation(Animation):
+    num_frames = 8
+    fps = 8
+    current_still = 0
+    def __init__(self,texture,name,item):
+        self.texture = texture
+        self.name    = name
+        self.item    = item
+        if name in ('left','right'):
+            self.still_tcs = [globals.atlas.TextureSpriteCoords('%s_%s_%s_%d.png' % (self.texture,self.name,self.item,i)) for i in xrange(5)]
+        else:
+            self.still_tcs = [globals.atlas.TextureSpriteCoords('%s_%s_%s_%d.png' % (self.texture,'right',self.item,i)) for i in xrange(5)]
+        
+        self.start = 0
+        self.tcs = []
+        for i in xrange(self.num_frames):
+            self.tcs.append(globals.atlas.TextureSpriteCoords('%s_%s_walk_right_%d.png' % (self.texture,item,i)))
+
+        new_tcs = range(self.num_frames)
+        if self.name != 'right':
+            for i in xrange(self.num_frames):
+                #flip the x-coords...
+                j = self.num_frames - 1 - i
+                new_tcs[i] = [self.tcs[j][3],self.tcs[j][2],self.tcs[j][1],self.tcs[j][0]]
+
+            self.tcs = new_tcs
+
+    def GetTc(self,still,x):
+        if still:
+            return self.still_tcs[GunAnimation.current_still]
+        elapsed = (x - self.start)*0.125
+        frame = int((elapsed*self.fps)%self.num_frames)
+        return self.tcs[frame]
+
 class WeaponTypes:
     FIST   = 0
     AXE    = 1
     PISTOL = 2
     
-    all = [FIST,AXE]
+    all = [FIST,AXE,PISTOL]
+    guns = [PISTOL]
     names = {FIST : 'fist',
              AXE  : 'axe',
              PISTOL : 'pistol'}
@@ -66,20 +103,27 @@ class Weapon(object):
     def Fire(self,pos):
         self.end = globals.time + self.duration
         self.save_anim = self.player.dirs[self.player.dir][self.type]
-        self.save_tc = self.save_anim.still_tc
         self.player.quad.SetTextureCoordinates(self.save_anim.attack_tc)
         
     def Update(self,t):
         return True if t > self.end else False
+
+class Gun(Weapon):
+    def Fire(self,pos):
+        self.end = globals.time + self.duration
+        print 'boom!'
 
 class Fist(Weapon):
     duration = 500
     type = WeaponTypes.FIST
 
 class Axe(Weapon):
-    duration = 800
+    duration = 900
     type = WeaponTypes.AXE
-  
+ 
+class Pistol(Gun):
+    duration = 200
+    type = WeaponTypes.PISTOL
 
 
 class Actor(object):
@@ -105,11 +149,12 @@ class Actor(object):
         for dir,name in self.dirsa:
             self.dirs[dir] = {}
             for weapon_type in WeaponTypes.all:
-                self.dirs[dir][weapon_type] = Animation(self.texture,name,WeaponTypes.names[weapon_type])
+                AnimationType = GunAnimation if weapon_type in WeaponTypes.guns else Animation
+                self.dirs[dir][weapon_type] = AnimationType(self.texture,name,WeaponTypes.names[weapon_type])
 
         #self.dirs = dict((dir,globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))) for (dir,name) in self.dirs)
         self.dir = Directions.RIGHT
-        self.weapon = Axe(self)
+        self.weapon = Pistol(self)
         self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir][self.weapon.type].GetTc(0,0))
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
         self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
@@ -181,6 +226,8 @@ class Actor(object):
 
         if abs(amount.x) <  0.0001:
             self.still = True
+            amount.x = 0
+            self.move_speed.x = 0
         else:
             self.still = False
 
@@ -264,3 +311,23 @@ class Player(Actor):
     width = 24/Actor.overscan
     height = 32/Actor.overscan
     jump_amount = 0.4
+    shoulder_pos = Point(10,21)
+
+    def MouseMotion(self,pos,rel):
+        diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
+        distance,angle = cmath.polar(complex(diff.x,diff.y))
+        print distance,angle
+        if abs(angle)*2 > math.pi:
+            print 'left',self.move_speed
+            self.dir = Directions.LEFT
+        else:
+            print 'right',self.move_speed
+            self.dir = Directions.RIGHT
+        sector = math.pi/16
+        if abs(angle) < sector or abs(angle) > sector*15:
+            GunAnimation.current_still = 0
+        elif (sector*3 < angle < sector*5) or (sector*13 < angle < sector*15):
+            GunAnimation.current_still = 1
+        elif (sector*5 < angle < sector*7) or (sector*11 < angle < sector*13):
+            GunAnimation.current_still = 2
+        #self.dirs[self.dir][self.weapon.type].

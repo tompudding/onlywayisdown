@@ -12,6 +12,9 @@ class Mode(object):
     
     def KeyDown(self,key):
         pass
+
+    def MouseMotion(self,pos,rel):
+        pass
     
     def KeyUp(self,key):
         pass
@@ -119,6 +122,8 @@ class GameMode(Mode):
         self.parent.map.player.Click(pos,button)
         return False,False
 
+    def MouseMotion(self,pos,rel):
+        self.parent.map.player.MouseMotion(pos,rel)
 
 class GameOver(Mode):
     blurb = "GAME OVER"
