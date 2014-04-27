@@ -626,6 +626,7 @@ class Player(Actor):
     def Update(self,t):
         if self.dead:
             globals.current_view.mode = modes.GameOver(globals.current_view)
+            globals.current_view.game_over = True
         self.UpdateMouse(self.mouse_pos,None)
         super(Player,self).Update(t)
 
@@ -882,6 +883,17 @@ class HealthItem(Collectable):
     def Collect(self,owner):
         if isinstance(owner,Player) and not self.destroyed:
             owner.AdjustHealth(10)
+            self.destroyed = True
+
+class EndItem(Collectable):
+    texture = 'end_item.png'
+    width = 20
+    height = 14
+
+    def Collect(self,owner):
+        if isinstance(owner,Player) and not self.destroyed:
+            globals.current_view.mode = modes.GameWin(globals.current_view)
+            globals.current_view.game_over = True
             self.destroyed = True
 
 

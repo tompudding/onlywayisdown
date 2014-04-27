@@ -134,7 +134,6 @@ class GameOver(Mode):
     blurb = "GAME OVER : you were eaten by zombies"
     def __init__(self,parent):
         self.parent          = parent
-        self.blurb           = self.blurb
         self.blurb_text      = None
         self.handlers        = {TitleStages.TEXT    : self.TextDraw,
                                 TitleStages.SCROLL  : self.Wait,
@@ -201,3 +200,6 @@ class GameOver(Mode):
     def MouseButtonDown(self,pos,button):
         self.KeyDown(0)
         return False,False
+
+class GameWin(GameOver):
+    blurb = "You launch the ICBM for some reason, killing many zombies (and people). You win?"
