@@ -140,7 +140,9 @@ class TileTypes:
     LADDER              = 6
     LADDER_TOP          = 7
     TILE                = 8
-    Impassable          = set((GRASS,ROCK))
+    ROCK_FLOOR          = 9
+    SIGN1               = 10
+    Impassable          = set((GRASS,ROCK,ROCK_FLOOR))
     Ladders             = set((LADDER_TOP,LADDER))
     LadderTops          = set((LADDER_TOP,))
 
@@ -151,6 +153,8 @@ class TileData(object):
                      TileTypes.ROCK          : 'rock.png',
                      TileTypes.LADDER        : 'ladder.png',
                      TileTypes.TILE          : 'tile.png',
+                     TileTypes.ROCK_FLOOR    : 'rock_floor.png',
+                     TileTypes.SIGN1         : 'sign1.png',
                      TileTypes.LADDER_TOP    : 'ladder.png'}
 
     def __init__(self,type,pos):
@@ -224,6 +228,8 @@ class GameMap(object):
                      'l' : TileTypes.LADDER,
                      'L' : TileTypes.LADDER_TOP,
                      'p' : TileTypes.PLAYER,
+                     '+' : TileTypes.ROCK_FLOOR,
+                     's' : TileTypes.SIGN1,
                      'z' : TileTypes.ZOMBIE}
     def __init__(self,name,parent):
         self.size   = Point(128,92)
