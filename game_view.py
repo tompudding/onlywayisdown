@@ -29,7 +29,7 @@ class Viewpos(object):
         self.start_time    = None
 
     def Set(self,point):
-        self.pos = point#.to_int()
+        self.pos = point.to_int()
         self.NoTarget()
 
     def SetTarget(self,point,t,rate=2,callback = None):
@@ -73,7 +73,7 @@ class Viewpos(object):
         try:
             return self.update(t)
         finally:
-            self.pos = self.pos#.to_int()
+            self.pos = self.pos.to_int()
 
     def update(self,t):
         self.t = t
