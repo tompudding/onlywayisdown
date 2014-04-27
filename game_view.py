@@ -151,7 +151,8 @@ class TileTypes:
     HEALTH              = 14
     MUTANT_ZOMBIE       = 15
     MISSILE             = 16
-    Impassable          = set((GRASS,ROCK,ROCK_FLOOR))
+    MISSILE_IMPASSABLE  = 17
+    Impassable          = set((GRASS,ROCK,ROCK_FLOOR,MISSILE_IMPASSABLE))
     Ladders             = set((LADDER_TOP,LADDER))
     LadderTops          = set((LADDER_TOP,))
 
@@ -170,6 +171,7 @@ class TileData(object):
                      TileTypes.BULLETS       : 'tile.png',
                      TileTypes.MUTANT_ZOMBIE : 'tile.png',
                      TileTypes.MISSILE       : 'missile.png',
+                     TileTypes.MISSILE_IMPASSABLE : 'missile.png',
                      TileTypes.LADDER_TOP    : 'ladder.png'}
 
     def __init__(self,type,pos):
@@ -254,6 +256,7 @@ class GameMap(object):
                      'h' : TileTypes.HEALTH,
                      'z' : TileTypes.ZOMBIE,
                      'm' : TileTypes.MISSILE,
+                     'M' : TileTypes.MISSILE_IMPASSABLE,
                      'Z' : TileTypes.MUTANT_ZOMBIE,}
     def __init__(self,name,parent):
         global naked_zombie
@@ -287,9 +290,10 @@ class GameMap(object):
                 for inv_x,tile in enumerate(line[::-1]):
                     x = self.size.x-1-inv_x
                     #try:
-                    if self.input_mapping[tile] == TileTypes.ZOMBIE:
+                    if self.input_mapping[tile] in [TileTypes.ZOMBIE,TileTypes.MUTANT_ZOMBIE]:
                         print x,y,self.data[x+1][y].name
                         TileData.texture_names[TileTypes.ZOMBIE] = self.data[x+1][y].name
+                        TileData.texture_names[TileTypes.MUTANT_ZOMBIE] = self.data[x+1][y].name
                         if self.data[x+1][y].name == 'air':
                             naked_zombie = True
                         else:
@@ -328,6 +332,10 @@ class GameMap(object):
                 y -= 1
                 if y < 0:
                     break
+        for i in xrange(len(self.data)):
+            for j in xrange(len(self.data[i])):
+                if not isinstance(self.data[i][j],TileData):
+                    self.data[i][j] = TileDataAir('air',Point(i,j))
 
     def Update(self,t):
         for actor in self.actors:
