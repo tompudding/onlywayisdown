@@ -87,6 +87,8 @@ class GameMode(Mode):
                 pygame.K_w    : KeyFlags.UP,
                 pygame.K_s  : KeyFlags.DOWN}
 
+    inv_keys = [pygame.K_1,pygame.K_2,pygame.K_3]
+
     def __init__(self,parent):
         self.parent = parent
         bl = self.parent.GetRelative(self.parent.viewpos.pos)
@@ -117,6 +119,9 @@ class GameMode(Mode):
         elif key == pygame.K_SPACE:
             self.parent.map.player.jumping = False
             self.parent.map.player.jumped  = False
+        elif key in self.inv_keys:
+            inv = self.inv_keys.index(key)
+            self.parent.map.player.Select(inv)
 
     def MouseButtonDown(self,pos,button):
         self.parent.map.player.Click(pos,button)

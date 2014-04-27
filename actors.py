@@ -486,7 +486,9 @@ class Player(Actor):
     initial_health = 100
 
     def __init__(self,map,pos):
-        self.weapon = Fist(self)
+        self.inventory = [Fist(self),Axe(self),Pistol(self)]
+        self.current_item = 0
+        self.weapon = self.inventory[self.current_item]
         self.still = True
         self.angle = 0
         self.gun_pos = Point(14,21)
@@ -513,6 +515,10 @@ class Player(Actor):
                                                colour = (1,1,0,1),
                                                scale = 3,
                                                alignment = drawing.texture.TextAlignments.CENTRE)
+
+    def Select(self,index):
+        if not self.attacking and self.inventory[index]:
+            self.weapon = self.inventory[index]
 
     def GunPos(self):
         return self.pos + self.gun_pos[self.dir].to_float()/globals.tile_dimensions
