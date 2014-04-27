@@ -116,7 +116,10 @@ class Weapon(object):
 class Gun(Weapon):
     def Fire(self,pos):
         self.end = globals.time + self.duration
+        
         print 'boom!'
+        bullet = Bullet(self.player.map,self.player.GunPos(),self.player.angle,self.player)
+        self.player.map.CreateActor(bullet)
 
 class Fist(Weapon):
     duration = 500
@@ -171,6 +174,9 @@ class Actor(object):
         
         self.attacking = False
 
+    def Damage(self,amount):
+        pass
+
     def SetPos(self,pos):
         if self.pos != None:
             bl = self.pos.to_int()
@@ -211,6 +217,9 @@ class Actor(object):
             if finished:
                 self.attacking = False
         self.Move(t)
+
+    def TriggerCollide(self,target):
+        pass
 
     def Move(self,t):
         if self.last_update == None:
@@ -274,6 +283,7 @@ class Actor(object):
                     amount.x = (int(target_x)+1-pos.x+self.threshold)
                 
                 target_x = pos.x + amount.x
+                self.TriggerCollide(None)
                 
             elif (int(target_x),int(pos.y)) in self.map.object_cache:
                 obj = self.map.object_cache[int(target_x),int(pos.y)]
@@ -283,11 +293,16 @@ class Actor(object):
                     else:
                         amount.x = (int(target_x)+1-pos.x+self.threshold)
                     target_x = pos.x + amount.x
+                    self.TriggerCollide(obj)
             else: 
                 for actor in target_tile_x.actors:
                     if actor is self:
                         continue
+                    if isinstance(actor,Bullet):
+                        actor.TriggerCollide(self)
+                        continue
                     if target_x >= actor.pos.x and target_x < actor.pos.x + actor.size.x and pos.y >= actor.pos.y and pos.y < actor.pos.y + actor.size.y:
+                        self.TriggerCollide(actor)
                         if amount.x > 0:
                             amount.x = (actor.pos.x-pos.x-self.threshold)
                         else:
@@ -313,6 +328,7 @@ class Actor(object):
                 else:
                     amount.y = (int(target_y)+1+self.threshold-pos.y)
                 target_y = pos.y + amount.y
+                self.TriggerCollide(None)
             elif (int(pos.x),int(target_y)) in self.map.object_cache:
                 obj = self.map.object_cache[int(pos.x),int(target_y)]
                 if obj.Contains(Point(pos.x,target_y)):
@@ -321,9 +337,13 @@ class Actor(object):
                     else:
                         amount.y = (int(target_y)+1+self.threshold-pos.y)
                     target_y = pos.y + amount.y
+                    self.TriggerCollide(obj)
             else:
                 for actor in target_tile_y.actors:
                     if actor is self:
+                        continue
+                    if isinstance(actor,Bullet):
+                        actor.TriggerCollide(self)
                         continue
                     if target_y >= actor.pos.y and target_y < actor.pos.y + actor.size.y and pos.x >= actor.pos.x and pos.x < actor.pos.x + actor.size.x:
                         if amount.y > 0:
@@ -331,6 +351,7 @@ class Actor(object):
                         else:
                             amount.y = (actor.pos.y+actor.size.y-pos.y+self.threshold)
                         target_y = pos.y + amount.y
+                        self.TriggerCollide(actor)
                         break
                 
             
@@ -357,13 +378,18 @@ class Player(Actor):
     height = 32/Actor.overscan
     jump_amount = 0.4
     shoulder_pos = Point(10,21)
+    gun_pos = Point(14,21)
     weapon_types = WeaponTypes.all
     fps = 8
 
     def __init__(self,map,pos):
         self.weapon = Pistol(self)
         self.still = True
+        self.angle = 0
         super(Player,self).__init__(map,pos)
+
+    def GunPos(self):
+        return self.pos + self.gun_pos/globals.tile_dimensions
 
     def MouseMotion(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)
@@ -386,7 +412,124 @@ class Player(Actor):
             GunAnimation.current_still = 3
         elif (sector*3 < -angle < sector*5) or (sector*11 < -angle < sector*13):
             GunAnimation.current_still = 4
+        self.angle = angle
         #self.dirs[self.dir][self.weapon.type].
+
+    def Damage(self,amount):
+        print 'player damaged by',amount
+
+class Bullet(Actor):
+    texture = 'bullet'
+    width = 1
+    height = 1
+    damage_amount = 10
+    speed = 0.5
+
+    def __init__(self,map,pos,angle,launcher):
+        self.map  = map
+        self.pos = None
+        self.last_update = None
+        self.launcher = launcher
+        ms = cmath.rect(self.speed,angle)
+        self.move_speed = Point(ms.real,ms.imag)
+        self.tc = globals.atlas.TextureSpriteCoords('bullet.png')
+        self.quad = drawing.Quad(globals.quad_buffer,tc = self.tc)
+        self.quad.Enable()
+        self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
+        
+        self.SetPos(pos)
+        self.current_sound = None
+        self.jumping = False
+        self.jumped = False
+        self.ResetWalked()
+        
+        self.destroyed = False
+
+    def SetPos(self,pos):
+        if self.pos != None:
+            self.map.RemoveActor(self.pos.to_int(),self)
+        
+        self.pos = pos
+        self.map.AddActor(self.pos.to_int(),self)
+        over_size = Point(self.width,self.height)*self.overscan
+        extra = Point(self.width,self.height)*(self.overscan-1)
+        bl = (pos*globals.tile_dimensions) - extra/2
+        tr = bl + over_size
+        bl = bl.to_int()
+        tr = tr.to_int()
+        self.quad.SetVertices(bl,tr,4)
+
+    def Facing(self):
+        return 0
+
+    def on_ground(self):
+        return False
+
+    def Update(self,t):
+        if self.destroyed:
+            #remove it from things
+            self.map.RemoveActor(self.pos.to_int(),self)
+            self.map.DeleteActor(self)
+        self.Move(t)
+
+    def Move(self,t):
+        if self.last_update == None:
+            self.last_update = globals.time
+            return
+        elapsed = globals.time - self.last_update
+
+        #self.move_speed.y += globals.gravity*elapsed*0.03
+        amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
+
+        target = self.pos + amount
+        if target.x >= self.map.size.x:
+            self.TriggerCollide(None)
+                
+        elif target.x < 0:
+            self.TriggerCollide(None)
+
+        try:
+            target_tile = self.map.data[int(target.x)][int(target.y)]
+        except IndexError:
+            self.Destroy()
+            return
+        if target_tile.type in game_view.TileTypes.Impassable:
+            self.TriggerCollide(None)
+
+        elif (int(target.x),int(target.y)) in self.map.object_cache:
+            obj = self.map.object_cache[int(target.x),int(target.y)]
+            if obj.Contains(Point(target.x,target.y)):
+                self.TriggerCollide(obj)
+        else: 
+            for actor in target_tile.actors:
+                if actor is self or actor is self.launcher:
+                    continue
+                if target.x >= actor.pos.x and target.x < actor.pos.x + actor.size.x and target.y >= actor.pos.y and target.y < actor.pos.y + actor.size.y:
+                    self.TriggerCollide(actor)
+                    break
+
+        if amount.y == 0:
+            self.move_speed.y = 0
+            
+        self.SetPos(self.pos + amount)
+
+    def Click(self,pos,button):
+        pass
+
+    def GetPos(self):
+        return self.pos
+
+    def ResetWalked(self):
+        pass
+
+    def Destroy(self):
+        self.quad.Delete()
+        self.destroyed = True
+    
+    def TriggerCollide(self,target):
+        if target != None:
+            target.Damage(self.damage_amount)
+        self.Destroy()
 
 class Zombie(Actor):
     texture = 'zombie'
@@ -412,3 +555,6 @@ class Zombie(Actor):
 
     def ResetWalked(self):
         self.walked = random.random()
+
+    def Damage(self,amount):
+        print 'Zombie damaged by',amount

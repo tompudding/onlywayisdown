@@ -70,3 +70,4 @@ resource/sprites/zombie_left_fist.png:tiles_atlas_0.png:608:968.0:20:24
 resource/sprites/zombie_left_fist_attack.png:tiles_atlas_0.png:628:968.0:20:24
 resource/sprites/zombie_right_fist.png:tiles_atlas_0.png:648:968.0:20:24
 resource/sprites/zombie_right_fist_attack.png:tiles_atlas_0.png:668:968.0:20:24
+resource/sprites/bullet.png:tiles_atlas_0.png:304:999.0:1:1

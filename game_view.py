@@ -260,6 +260,12 @@ class GameMap(object):
     def RemoveActor(self,pos,actor):
         self.data[pos.x][pos.y].RemoveActor(actor)
 
+    def CreateActor(self,actor):
+        self.actors.append(actor)
+
+    def DeleteActor(self,actor):
+        self.actors = [act for act in self.actors if act is not actor]
+
 class GameView(ui.RootElement):
     def __init__(self):
         self.atlas = globals.atlas = drawing.texture.TextureAtlas('tiles_atlas_0.png','tiles_atlas.txt')
