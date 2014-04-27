@@ -16,11 +16,11 @@ class Directions:
     LEFT  = 3
 
 class Animation(object):
-    fps = 8
     num_frames = 8
-    def __init__(self,texture,name,item):
+    def __init__(self,texture,name,item,fps):
         self.texture = texture
         self.name = name
+        self.fps = fps
         self.still_tc = globals.atlas.TextureSpriteCoords('%s_%s_%s.png' % (self.texture,self.name,item))
         if name in ('left','right'):
             self.attack_tc = globals.atlas.TextureSpriteCoords('%s_%s_%s_attack.png' % (self.texture,self.name,item))
@@ -56,12 +56,12 @@ class Animation(object):
 
 class GunAnimation(Animation):
     num_frames = 8
-    fps = 8
     current_still = 0
-    def __init__(self,texture,name,item):
+    def __init__(self,texture,name,item,fps):
         self.texture = texture
         self.name    = name
         self.item    = item
+        self.fps     = fps
         if name in ('left','right'):
             self.still_tcs = [globals.atlas.TextureSpriteCoords('%s_%s_%s_%d.png' % (self.texture,self.name,self.item,i)) for i in xrange(5)]
         else:
@@ -153,7 +153,7 @@ class Actor(object):
             self.dirs[dir] = {}
             for weapon_type in self.weapon_types:
                 AnimationType = GunAnimation if weapon_type in WeaponTypes.guns else Animation
-                self.dirs[dir][weapon_type] = AnimationType(self.texture,name,WeaponTypes.names[weapon_type])
+                self.dirs[dir][weapon_type] = AnimationType(self.texture,name,WeaponTypes.names[weapon_type],self.fps)
 
         #self.dirs = dict((dir,globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))) for (dir,name) in self.dirs)
         self.dir = Directions.RIGHT
@@ -164,7 +164,7 @@ class Actor(object):
         self.current_sound = None
         self.jumping = False
         self.jumped = False
-        self.walked = 0
+        self.ResetWalked()
         
         self.attacking = False
 
@@ -236,7 +236,7 @@ class Actor(object):
         self.quad.SetTextureCoordinates(self.dirs[self.dir][self.weapon.type].GetTc(self.still,self.walked))
         
         if self.still:
-            self.walked = 0
+            self.ResetWalked()
 
         #check each of our four corners
         for corner in self.corners:
@@ -308,6 +308,9 @@ class Actor(object):
     def GetPos(self):
         return self.pos
 
+    def ResetWalked(self):
+        self.walked = 0
+
 class Player(Actor):
     texture = 'player'
     width = 24/Actor.overscan
@@ -315,6 +318,7 @@ class Player(Actor):
     jump_amount = 0.4
     shoulder_pos = Point(10,21)
     weapon_types = WeaponTypes.all
+    fps = 8
 
     def __init__(self,map,pos):
         self.weapon = Pistol(self)
@@ -347,7 +351,18 @@ class Zombie(Actor):
     height = 32/Actor.overscan
     jump_amount = 0
     weapon_types = [WeaponTypes.FIST]
+    fps = 24
     def __init__(self,map,pos):
         self.weapon = Fist(self)
+        self.speed = 0.02 + random.random()*0.01
         super(Zombie,self).__init__(map,pos)
     
+
+    def Update(self,t):
+        #print 'zombie update',t
+        #Try moving right
+        self.move_direction = Point(self.speed,0)
+        super(Zombie,self).Update(t)
+
+    def ResetWalked(self):
+        self.walked = random.random()
