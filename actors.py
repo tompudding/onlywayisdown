@@ -162,13 +162,13 @@ class Fist(Weapon):
         
 class ZombieBite(Fist):
     duration = 1000
-    
+    vectors = {Directions.LEFT : Point(-0.4,1.5), Directions.RIGHT: Point(1.5,1.5)}
 
 class Axe(Weapon):
-    duration = 900
+    duration = 700
     damage = 20
     variance = 10
-    vectors = {Directions.LEFT : Point(-0.2,1.5), Directions.RIGHT: Point(1.5,1.5)}
+    vectors = {Directions.LEFT : Point(-0.5,1.5), Directions.RIGHT: Point(1.8,1.5)}
     icon = 'axe.png'
     type = WeaponTypes.AXE
  
@@ -756,10 +756,12 @@ class Zombie(Actor):
     weapon_types = [WeaponTypes.FIST]
     fps = 24
     initial_health = 40
+    reaction_time = 500
     def __init__(self,map,pos):
         self.weapon = ZombieBite(self)
         self.speed = 0.02 + random.random()*0.01
         self.random_walk_end = None
+        self.close_trigger = None
         super(Zombie,self).__init__(map,pos)
 
     def Update(self,t):
@@ -775,16 +777,28 @@ class Zombie(Actor):
                 #Too far away, try a random walk
                 self.move_direction = random.choice((Point(self.speed,0),Point(-self.speed,0)))
                 self.random_walk_end = globals.time + random.gauss(2000,1)
+                self.close_trigger = None
             else:
                 #walk towards the player
                 if self.map.player.pos.x > self.pos.x:
                     self.move_direction = Point(self.speed,0)
                 else:
                     self.move_direction = Point(-self.speed,0)
-                if not self.attacking and abs(diff.x) < 1:
-                    print 'x',self.attacking
-                    self.weapon.Fire(None)
-                    self.attacking = True
+                if self.dir == Directions.LEFT:
+                    th = 1.5
+                else:
+                    th = 1
+                if not self.attacking and abs(diff.x) < th:
+                    if self.close_trigger and self.close_trigger <= globals.time:
+                        print 'x',self.attacking
+                        self.weapon.Fire(None)
+                        self.attacking = True
+                    elif self.close_trigger == None:
+                        self.close_trigger = globals.time + self.reaction_time
+                        print 'yo',self.close_trigger
+                if abs(diff.x) >= th:
+                    self.close_trigger = None
+                        
         super(Zombie,self).Update(t)
 
     def ResetWalked(self):
