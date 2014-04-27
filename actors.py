@@ -220,7 +220,14 @@ class Actor(object):
         self.splat_pos = None
         self.splat_end = 0
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
-        self.corners = Point(0,0),Point(self.size.x/2.0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
+        self.corners = (Point(0,0),
+                        Point(0,self.size.y/2.0),
+                        Point(self.size.x/2.0,0),
+                        Point(self.size.x/2.0,self.size.y),
+                        Point(self.size.x,0),
+                        Point(self.size.x,self.size.y/2.0),
+                        Point(0,self.size.y),
+                        self.size)
         self.SetPos(pos)
         self.current_sound = None
         self.jumping = False
@@ -790,11 +797,6 @@ class Collectable(Actor):
             self.map.DeleteActor(self)
             self.quad.Delete()
 
-    def Collect(self,owner):
-        if isinstance(owner,Player):
-            owner.AddItem(Axe(owner))
-        self.destroyed = True
-
     def Move(self,t):
         pass
 
@@ -822,6 +824,42 @@ class AxeItem(Collectable):
     texture = 'axe_item.png'
     width = 6
     height = 19
+
+    def Collect(self,owner):
+        if isinstance(owner,Player):
+            owner.AddItem(Axe(owner))
+            self.destroyed = True
+
+class PistolItem(Collectable):
+    texture = 'pistol_item.png'
+    width = 20
+    height = 14
+
+    def Collect(self,owner):
+        if isinstance(owner,Player):
+            owner.AddItem(Pistol(owner))
+            self.destroyed = True
+
+class BulletsItem(Collectable):
+    texture = 'bullets_item.png'
+    width = 20
+    height = 14
+
+    def Collect(self,owner):
+        if isinstance(owner,Player):
+            owner.AdjustBullets(2)
+            self.destroyed = True
+
+class HealthItem(Collectable):
+    texture = 'health_item.png'
+    width = 20
+    height = 14
+
+    def Collect(self,owner):
+        if isinstance(owner,Player):
+            owner.AdjustHealth(10)
+            self.destroyed = True
+
 
 class Zombie(Actor):
     texture = 'zombie'

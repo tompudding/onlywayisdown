@@ -98,7 +98,7 @@ class Viewpos(object):
 
         if self.follow:
             #We haven't locked onto it yet, so move closer, and lock on if it's below the threshold
-            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.2)
+            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.1)
             if not fpos:
                 return
             target = fpos - (globals.screen*0.5).to_int()
@@ -143,6 +143,8 @@ class TileTypes:
     ROCK_FLOOR          = 9
     SIGN1               = 10
     AXE                 = 11
+    PISTOL              = 12
+    BULLETS             = 13
     Impassable          = set((GRASS,ROCK,ROCK_FLOOR))
     Ladders             = set((LADDER_TOP,LADDER))
     LadderTops          = set((LADDER_TOP,))
@@ -157,6 +159,8 @@ class TileData(object):
                      TileTypes.ROCK_FLOOR    : 'rock_floor.png',
                      TileTypes.SIGN1         : 'sign1.png',
                      TileTypes.AXE           : 'tile.png',
+                     TileTypes.PISTOL        : 'tile.png',
+                     TileTypes.BULLETS       : 'tile.png',
                      TileTypes.LADDER_TOP    : 'ladder.png'}
 
     def __init__(self,type,pos):
@@ -236,6 +240,8 @@ class GameMap(object):
                      '+' : TileTypes.ROCK_FLOOR,
                      's' : TileTypes.SIGN1,
                      'x' : TileTypes.AXE,
+                     'P' : TileTypes.PISTOL,
+                     'b' : TileTypes.BULLETS,
                      'z' : TileTypes.ZOMBIE}
     def __init__(self,name,parent):
         global naked_zombie
@@ -293,6 +299,12 @@ class GameMap(object):
                     if self.input_mapping[tile] == TileTypes.AXE:
                         axe = actors.AxeItem(self,Point(x+0.2,y))
                         self.actors.append(axe)
+                    if self.input_mapping[tile] == TileTypes.PISTOL:
+                        pistol = actors.PistolItem(self,Point(x+0.2,y))
+                        self.actors.append(pistol)
+                    if self.input_mapping[tile] == TileTypes.BULLETS:
+                        bullets = actors.BulletsItem(self,Point(x+0.2,y))
+                        self.actors.append(bullets)
                     #except KeyError:
                     #    raise globals.types.FatalError('Invalid map data')
                 y -= 1
