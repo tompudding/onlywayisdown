@@ -164,6 +164,12 @@ class Actor(object):
         #self.dirs = dict((dir,globals.atlas.TextureSpriteCoords('%s_%s.png' % (self.texture,name))) for (dir,name) in self.dirs)
         self.dir = Directions.RIGHT
         self.quad = drawing.Quad(globals.quad_buffer,tc = self.dirs[self.dir][self.weapon.type].GetTc(0,0))
+        self.splat_tc = globals.atlas.TextureSpriteCoords('splat.png')
+        self.splat_quad = drawing.Quad(globals.quad_buffer,tc = self.splat_tc)
+        self.splat_size = globals.atlas.SubimageSprite('splat.png').size
+        self.splat_quad.Disable()
+        self.splat_pos = None
+        self.splat_end = 0
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
         self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
         self.SetPos(pos)
@@ -174,8 +180,11 @@ class Actor(object):
         
         self.attacking = False
 
-    def Damage(self,amount):
-        pass
+    def Damage(self,amount,pos):
+        self.splat_pos = pos - self.pos
+        self.splat_end = globals.time + 1000
+        self.splat_quad.Enable()
+        print 'sp',self.splat_pos
 
     def SetPos(self,pos):
         if self.pos != None:
@@ -198,6 +207,13 @@ class Actor(object):
         bl = bl.to_int()
         tr = tr.to_int()
         self.quad.SetVertices(bl,tr,4)
+        if self.splat_pos:
+            bl = (self.pos + self.splat_pos)*globals.tile_dimensions
+            tr = bl + self.splat_size
+            bl = bl.to_int()
+            tr = tr.to_int()
+            print 'yoyo',bl,tr
+            self.splat_quad.SetVertices(bl,tr,5)
 
     def Facing(self):
         facing = self.pos + (self.size/2) + self.dirs_pos[self.dir]
@@ -216,6 +232,9 @@ class Actor(object):
             finished = self.weapon.Update(t)
             if finished:
                 self.attacking = False
+        if self.splat_pos and t > self.splat_end:
+            self.splat_quad.Disable()
+            self.splat_pos = None
         self.Move(t)
 
     def TriggerCollide(self,target):
@@ -420,7 +439,7 @@ class Player(Actor):
         self.angle = angle
         #self.dirs[self.dir][self.weapon.type].
 
-    def Damage(self,amount):
+    def Damage(self,amount,pos):
         print 'player damaged by',amount
 
 class Bullet(Actor):
@@ -428,7 +447,7 @@ class Bullet(Actor):
     width = 1
     height = 1
     damage_amount = 10
-    speed = 0.5
+    speed = 0.2
 
     def __init__(self,map,pos,angle,launcher):
         self.map  = map
@@ -505,13 +524,13 @@ class Bullet(Actor):
         elif (int(target.x),int(target.y)) in self.map.object_cache:
             obj = self.map.object_cache[int(target.x),int(target.y)]
             if obj.Contains(Point(target.x,target.y)):
-                self.TriggerCollide(obj)
+                self.TriggerCollide(obj,target)
         else: 
             for actor in target_tile.actors:
                 if actor is self or actor is self.launcher:
                     continue
                 if target.x >= actor.pos.x and target.x < actor.pos.x + actor.size.x and target.y >= actor.pos.y and target.y < actor.pos.y + actor.size.y:
-                    self.TriggerCollide(actor)
+                    self.TriggerCollide(actor,target)
                     break
 
         if amount.y == 0:
@@ -532,11 +551,11 @@ class Bullet(Actor):
         self.quad.Delete()
         self.destroyed = True
     
-    def TriggerCollide(self,target):
+    def TriggerCollide(self,target,pos = None):
         if self.destroyed:
             return
         if target != None:
-            target.Damage(self.damage_amount)
+            target.Damage(self.damage_amount,pos if pos != None else self.pos)
         self.Destroy()
 
 class Zombie(Actor):
@@ -565,5 +584,6 @@ class Zombie(Actor):
     def ResetWalked(self):
         self.walked = random.random()
 
-    def Damage(self,amount):
-        print 'Zombie damaged by',amount
+    def Damage(self,amount,pos):
+        print 'Zombie damaged by',amount,pos
+        super(Zombie,self).Damage(amount,pos)
