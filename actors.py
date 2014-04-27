@@ -220,7 +220,7 @@ class Actor(object):
         self.splat_pos = None
         self.splat_end = 0
         self.size = Point(self.width,self.height).to_float()/globals.tile_dimensions
-        self.corners = Point(0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
+        self.corners = Point(0,0),Point(self.size.x/2.0,0),Point(self.size.x,0),Point(0,self.size.y),self.size
         self.SetPos(pos)
         self.current_sound = None
         self.jumping = False
@@ -419,13 +419,15 @@ class Actor(object):
                     if target_x >= actor.pos.x and target_x < actor.pos.x + actor.size.x and pos.y >= actor.pos.y and pos.y < actor.pos.y + actor.size.y:
                         self.TriggerCollide(actor)
                         if amount.x > 0:
-                            amount.x = (actor.pos.x-pos.x-self.threshold)
+                            new_amount = (actor.pos.x-pos.x-self.threshold)
                         else:
-                            amount.x = (actor.pos.x+actor.size.x-pos.x+self.threshold)
+                            new_amount = (actor.pos.x+actor.size.x-pos.x+self.threshold)
+                        if abs(new_amount - amount.x) < 0.2:
+                            amount.x = new_amount
                         target_x = pos.x + amount.x
                         break
 
-        for corner in self.corners:
+        for corner_i,corner in enumerate(self.corners):
             pos = self.pos + corner
             target_y = pos.y + amount.y
             if target_y >= self.map.size.y:
@@ -463,9 +465,13 @@ class Actor(object):
                         continue
                     if target_y >= actor.pos.y and target_y < actor.pos.y + actor.size.y and pos.x >= actor.pos.x and pos.x < actor.pos.x + actor.size.x:
                         if amount.y > 0:
-                            amount.y = (actor.pos.y-pos.y-self.threshold)
+                            new_amount = (actor.pos.y-pos.y-self.threshold)
                         else:
-                            amount.y = (actor.pos.y+actor.size.y-pos.y+self.threshold)
+                            new_amount = (actor.pos.y+actor.size.y-pos.y+self.threshold)
+                        if corner_i == 1 and isinstance(self,Player):
+                            print new_amount,amount.y,(abs(new_amount-amount.y) < 0.3)
+                        if (abs(new_amount) < 0.3):
+                            amount.y = new_amount
                         target_y = pos.y + amount.y
                         self.TriggerCollide(actor)
                         break
@@ -497,7 +503,7 @@ class Player(Actor):
     texture = 'player'
     width = 24/Actor.overscan.x
     height = 32/Actor.overscan.y
-    jump_amount = 0.4
+    jump_amount = 0.5
     shoulder_pos = Point(10,21).to_float()
     weapon_types = WeaponTypes.all
     fps = 8
