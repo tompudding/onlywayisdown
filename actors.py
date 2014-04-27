@@ -109,6 +109,15 @@ class Weapon(object):
         self.end = globals.time + self.duration
         self.save_anim = self.player.dirs[self.player.dir][self.type]
         self.player.quad.SetTextureCoordinates(self.save_anim.attack_tc)
+        target = self.player.pos + self.vectors[self.player.dir]
+        
+        target_tile = self.player.map.data[int(target.x)][int(target.y)]
+        damage = self.damage + (random.random()-0.5)*2*self.variance
+        for actor in target_tile.actors:
+            if actor is self.player:
+                continue
+            if target.x >= actor.pos.x and target.x < actor.pos.x + actor.size.x and target.y >= actor.pos.y and target.y < actor.pos.y + actor.size.y:
+                actor.Damage(damage,target)
         
     def Update(self,t):
         return True if t > self.end else False
@@ -130,10 +139,16 @@ class Gun(Weapon):
 
 class Fist(Weapon):
     duration = 500
+    damage = 10
+    variance = 10
+    vectors = {Directions.LEFT : Point(-0.2,1.5), Directions.RIGHT: Point(1,1.5)}
     type = WeaponTypes.FIST
 
 class Axe(Weapon):
     duration = 900
+    damage = 20
+    variance = 10
+    vectors = {Directions.LEFT : Point(-0.2,1.5), Directions.RIGHT: Point(1.5,1.5)}
     type = WeaponTypes.AXE
  
 class Pistol(Gun):
@@ -460,7 +475,7 @@ class Player(Actor):
     initial_health = 100
 
     def __init__(self,map,pos):
-        self.weapon = Pistol(self)
+        self.weapon = Axe(self)
         self.still = True
         self.angle = 0
         self.gun_pos = Point(14,21)
@@ -666,16 +681,29 @@ class Zombie(Actor):
     def __init__(self,map,pos):
         self.weapon = Fist(self)
         self.speed = 0.02 + random.random()*0.01
+        self.random_walk_end = None
         super(Zombie,self).__init__(map,pos)
     
 
     def Update(self,t):
         #print 'zombie update',t
         #Try moving toward the player
-        if self.map.player.pos.x > self.pos.x:
-            self.move_direction = Point(self.speed,0)
-        else:
-            self.move_direction = Point(-self.speed,0)
+        if self.random_walk_end:
+            if globals.time > self.random_walk_end:
+                self.random_walk_end = None
+
+        if not self.random_walk_end:
+            diff = self.map.player.pos - self.pos
+            if (abs(diff.x) > 10 or abs(diff.y) > 2):
+                #Too far away, try a random walk
+                self.move_direction = random.choice((Point(self.speed,0),Point(-self.speed,0)))
+                self.random_walk_end = globals.time + random.gauss(2000,1)
+            else:
+                #walk towards the player
+                if self.map.player.pos.x > self.pos.x:
+                    self.move_direction = Point(self.speed,0)
+                else:
+                    self.move_direction = Point(-self.speed,0)
         super(Zombie,self).Update(t)
 
     def ResetWalked(self):
