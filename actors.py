@@ -139,6 +139,7 @@ class Actor(object):
     overscan  = 1.05
     def __init__(self,map,pos):
         self.map  = map
+        self.pos = None
         self.last_update = None
         self.dirsa = ((Directions.UP   ,'back' ),
                       (Directions.DOWN ,'front'),
@@ -171,7 +172,19 @@ class Actor(object):
         self.attacking = False
 
     def SetPos(self,pos):
+        if self.pos != None:
+            bl = self.pos.to_int()
+            tr = (self.pos+self.size).to_int()
+            for x in xrange(bl.x,tr.x+1):
+                for y in xrange(bl.y,tr.y+1):
+                    self.map.RemoveActor(Point(x,y),self)
+        
         self.pos = pos
+        bl = self.pos.to_int()
+        tr = (self.pos+self.size).to_int()
+        for x in xrange(bl.x,tr.x+1):
+            for y in xrange(bl.y,tr.y+1):
+                self.map.AddActor(Point(x,y),self)
         over_size = Point(self.width,self.height)*self.overscan
         extra = Point(self.width,self.height)*(self.overscan-1)
         bl = (pos*globals.tile_dimensions) - extra/2
@@ -244,6 +257,7 @@ class Actor(object):
         for corner in self.corners:
             pos = self.pos + corner
             target_x = pos.x + amount.x
+            target_y = pos.y + amount.y
             if target_x >= self.map.size.x:
                 target_x = self.map.size.x-self.threshold
                 amount.x = target_x - pos.x
@@ -269,6 +283,17 @@ class Actor(object):
                     else:
                         amount.x = (int(target_x)+1-pos.x+self.threshold)
                     target_x = pos.x + amount.x
+            else: 
+                for actor in target_tile_x.actors:
+                    if actor is self:
+                        continue
+                    if target_x >= actor.pos.x and target_x < actor.pos.x + actor.size.x and pos.y >= actor.pos.y and pos.y < actor.pos.y + actor.size.y:
+                        if amount.x > 0:
+                            amount.x = (actor.pos.x-pos.x-self.threshold)
+                        else:
+                            amount.x = (actor.pos.x+actor.size.x-pos.x+self.threshold)
+                        target_x = pos.x + amount.x
+                        break
 
         for corner in self.corners:
             pos = self.pos + corner
@@ -281,6 +306,7 @@ class Actor(object):
                 amount.y = -pos.y
                 target_y = 0
             target_tile_y = self.map.data[int(pos.x)][int(target_y)]
+            
             if target_tile_y.type in game_view.TileTypes.Impassable:
                 if amount.y > 0:
                     amount.y = (int(target_y)-pos.y-self.threshold)
@@ -295,6 +321,18 @@ class Actor(object):
                     else:
                         amount.y = (int(target_y)+1+self.threshold-pos.y)
                     target_y = pos.y + amount.y
+            else:
+                for actor in target_tile_y.actors:
+                    if actor is self:
+                        continue
+                    if target_y >= actor.pos.y and target_y < actor.pos.y + actor.size.y and pos.x >= actor.pos.x and pos.x < actor.pos.x + actor.size.x:
+                        if amount.y > 0:
+                            amount.y = (actor.pos.y-pos.y-self.threshold)
+                        else:
+                            amount.y = (actor.pos.y+actor.size.y-pos.y+self.threshold)
+                        target_y = pos.y + amount.y
+                        break
+                
             
         #self.move_speed.y = amount.y
         if amount.y == 0:

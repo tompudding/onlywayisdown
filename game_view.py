@@ -127,6 +127,7 @@ class TileData(object):
     def __init__(self,type,pos):
         self.pos  = pos
         self.type = type
+        self.actors = {}
         try:
             self.name = self.texture_names[type]
         except KeyError:
@@ -158,11 +159,20 @@ class TileData(object):
         self.quad.Delete()
     def Interact(self,player):
         pass
+    def AddActor(self,actor):
+        self.actors[actor] = True
+
+    def RemoveActor(self,actor):
+        try:
+            del self.actors[actor]
+        except KeyError:
+            pass
 
 class TileDataAir(TileData):
     def __init__(self,type,pos):
         self.type = type
         self.pos = pos
+        self.actors = {}
         self.name = 'air'
         self.size = Point(1,1)
 
@@ -243,6 +253,12 @@ class GameMap(object):
         #Now for each tile that the object touches, put it in the cache
         for tile in obj.CoveredTiles():
             self.object_cache[tile] = obj
+
+    def AddActor(self,pos,actor):
+        self.data[pos.x][pos.y].AddActor(actor)
+
+    def RemoveActor(self,pos,actor):
+        self.data[pos.x][pos.y].RemoveActor(actor)
 
 class GameView(ui.RootElement):
     def __init__(self):
