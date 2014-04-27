@@ -177,12 +177,12 @@ class Pistol(Gun):
     icon = 'pistol.png'
     type = WeaponTypes.PISTOL
 
-
 class Actor(object):
     texture   = None
     width     = None
     height    = None
     threshold = 0.01
+    z_adjust  = 0
     overscan  = Point(1.2,1.05)
     def __init__(self,map,pos):
         self.map  = map
@@ -281,13 +281,13 @@ class Actor(object):
         tr = bl + over_size
         bl = bl.to_int()
         tr = tr.to_int()
-        self.quad.SetVertices(bl,tr,4)
+        self.quad.SetVertices(bl,tr,4 +self.z_adjust)
         if self.splat_pos:
             bl = (self.pos + self.splat_pos)*globals.tile_dimensions
             tr = bl + self.splat_size
             bl = bl.to_int()
             tr = tr.to_int()
-            self.splat_quad.SetVertices(bl,tr,5)
+            self.splat_quad.SetVertices(bl,tr,5+self.z_adjust)
 
     def Facing(self):
         facing = self.pos + (self.size/2) + self.dirs_pos[self.dir]
@@ -299,6 +299,11 @@ class Actor(object):
             target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
             if target_tile_y.type in game_view.TileTypes.Impassable:
                 return True
+            for actor in target_tile_y.actors:
+                if actor is self or isinstance(actor,Bullet) or isinstance(actor,Collectable):
+                    continue
+                if pos.x >= actor.pos.x and pos.x <= actor.pos.x + actor.size.x and pos.y > actor.pos.y and pos.y < actor.pos.y + actor.size.y:
+                    return True
         return False
 
     def above_ladder(self):
@@ -346,7 +351,10 @@ class Actor(object):
         self.last_update = globals.time
         if self.attacking:
             return
-        
+
+        #I don't understand why I need this. Occasionally get huge values here. Figure it out later
+        if abs(self.move_speed.y) > 0.5:
+            self.move_speed.y = 0
         if self.on_ground() or self.on_ladder():
             self.move_speed.x += self.move_direction.x*elapsed*0.03
             if self.jumping and not self.jumped:
@@ -365,7 +373,6 @@ class Actor(object):
             self.move_speed.y += globals.gravity*elapsed*0.03
         
         amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
-        #print self.move_speed,amount
         self.walked += amount.x
         dir = None
         if amount.x > 0:
@@ -387,6 +394,7 @@ class Actor(object):
         
         if self.still:
             self.ResetWalked()
+        
 
         #check each of our four corners
         for corner in self.corners:
@@ -427,6 +435,9 @@ class Actor(object):
                     if isinstance(actor,Bullet):
                         actor.TriggerCollide(self)
                         continue
+                    if isinstance(actor,Collectable):
+                        self.TriggerCollide(actor)
+                        continue
                     if target_x >= actor.pos.x and target_x < actor.pos.x + actor.size.x and pos.y >= actor.pos.y and pos.y < actor.pos.y + actor.size.y:
                         self.TriggerCollide(actor)
                         if amount.x > 0:
@@ -444,7 +455,6 @@ class Actor(object):
             if target_y >= self.map.size.y:
                 target_y = self.map.size.y-self.threshold
                 amount.y = target_y - pos.y
-                
             elif target_y < 0:
                 amount.y = -pos.y
                 target_y = 0
@@ -455,6 +465,10 @@ class Actor(object):
                     amount.y = (int(target_y)-pos.y-self.threshold)
                 else:
                     amount.y = (int(target_y)+1+self.threshold-pos.y)
+                if amount.y < 0 and self.move_speed.y > 0:
+                    #hit our head
+                    print 'head'
+                    self.move_speed.y = 0
                 target_y = pos.y + amount.y
                 self.TriggerCollide(None)
                     
@@ -474,20 +488,20 @@ class Actor(object):
                     if isinstance(actor,Bullet):
                         actor.TriggerCollide(self)
                         continue
+                    if isinstance(actor,Collectable):
+                        self.TriggerCollide(actor)
+                        continue
                     if target_y >= actor.pos.y and target_y < actor.pos.y + actor.size.y and pos.x >= actor.pos.x and pos.x < actor.pos.x + actor.size.x:
                         if amount.y > 0:
                             new_amount = (actor.pos.y-pos.y-self.threshold)
                         else:
                             new_amount = (actor.pos.y+actor.size.y-pos.y+self.threshold)
-                        if corner_i == 1 and isinstance(self,Player):
-                            print new_amount,amount.y,(abs(new_amount-amount.y) < 0.3)
-                        if (abs(new_amount) < 0.3):
+                        if (abs(new_amount) < 0.2):
                             amount.y = new_amount
                         target_y = pos.y + amount.y
                         self.TriggerCollide(actor)
                         break
                 
-            
         #self.move_speed.y = amount.y
         if amount.y == 0:
             self.move_speed.y = 0
@@ -685,7 +699,7 @@ class Bullet(Actor):
         tr = bl + over_size
         bl = bl.to_int()
         tr = tr.to_int()
-        self.quad.SetVertices(bl,tr,4)
+        self.quad.SetVertices(bl,tr,4+self.z_adjust)
 
     def Facing(self):
         return 0
@@ -763,6 +777,8 @@ class Bullet(Actor):
         self.Destroy()
 
 class Collectable(Actor):
+    z_adjust = -0.1
+    overscan  = Point(1,1)
     def __init__(self,map,pos):
         self.map  = map
         self.pos = None
@@ -787,7 +803,7 @@ class Collectable(Actor):
         tr = bl + over_size
         bl = bl.to_int()
         tr = tr.to_int()
-        self.quad.SetVertices(bl,tr,4)
+        self.quad.SetVertices(bl,tr,4+self.z_adjust)
 
 
     def Update(self,t):
@@ -816,9 +832,6 @@ class Collectable(Actor):
     def TriggerCollide(self,target,pos = None):
         if self.destroyed:
             return
-        if target != None:
-            target.Damage(self.damage_amount,pos if pos != None else self.pos)
-        self.Destroy()
 
 class AxeItem(Collectable):
     texture = 'axe_item.png'
@@ -826,7 +839,7 @@ class AxeItem(Collectable):
     height = 19
 
     def Collect(self,owner):
-        if isinstance(owner,Player):
+        if isinstance(owner,Player) and not self.destroyed:
             owner.AddItem(Axe(owner))
             self.destroyed = True
 
@@ -836,7 +849,7 @@ class PistolItem(Collectable):
     height = 14
 
     def Collect(self,owner):
-        if isinstance(owner,Player):
+        if isinstance(owner,Player) and not self.destroyed:
             owner.AddItem(Pistol(owner))
             self.destroyed = True
 
@@ -846,7 +859,7 @@ class BulletsItem(Collectable):
     height = 14
 
     def Collect(self,owner):
-        if isinstance(owner,Player):
+        if isinstance(owner,Player) and not self.destroyed:
             owner.AdjustBullets(2)
             self.destroyed = True
 
@@ -856,7 +869,7 @@ class HealthItem(Collectable):
     height = 14
 
     def Collect(self,owner):
-        if isinstance(owner,Player):
+        if isinstance(owner,Player) and not self.destroyed:
             owner.AdjustHealth(10)
             self.destroyed = True
 
@@ -871,6 +884,7 @@ class Zombie(Actor):
     fps = 24
     initial_health = 40
     reaction_time = 500
+    reload_time = 2000
     def __init__(self,map,pos):
         self.weapon = ZombieBite(self)
         self.speed = 0.02 + random.random()*0.01
@@ -904,7 +918,6 @@ class Zombie(Actor):
                     th = 1
                 if not self.attacking and abs(diff.x) < th:
                     if self.close_trigger and self.close_trigger <= globals.time:
-                        print 'x',self.attacking
                         self.weapon.Fire(None)
                         self.attacking = True
                     elif self.close_trigger == None:
