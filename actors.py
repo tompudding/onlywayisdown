@@ -139,7 +139,7 @@ class Actor(object):
     width     = None
     height    = None
     threshold = 0.01
-    overscan  = 1.05
+    overscan  = Point(1.2,1.05)
     def __init__(self,map,pos):
         self.map  = map
         self.pos = None
@@ -192,7 +192,7 @@ class Actor(object):
             for y in xrange(bl.y,tr.y+1):
                 self.map.AddActor(Point(x,y),self)
         over_size = Point(self.width,self.height)*self.overscan
-        extra = Point(self.width,self.height)*(self.overscan-1)
+        extra = Point(self.width,self.height)*(self.overscan-Point(1,1))
         bl = (pos*globals.tile_dimensions) - extra/2
         tr = bl + over_size
         bl = bl.to_int()
@@ -374,8 +374,8 @@ class Actor(object):
 
 class Player(Actor):
     texture = 'player'
-    width = 24/Actor.overscan
-    height = 32/Actor.overscan
+    width = 24/Actor.overscan.x
+    height = 32/Actor.overscan.y
     jump_amount = 0.4
     shoulder_pos = Point(10,21).to_float()
     weapon_types = WeaponTypes.all
@@ -457,7 +457,7 @@ class Bullet(Actor):
         self.pos = pos
         self.map.AddActor(self.pos.to_int(),self)
         over_size = Point(self.width,self.height)*self.overscan
-        extra = Point(self.width,self.height)*(self.overscan-1)
+        extra = Point(self.width,self.height)*(self.overscan-Point(1,1))
         bl = (pos*globals.tile_dimensions) - extra/2
         tr = bl + over_size
         bl = bl.to_int()
@@ -541,8 +541,9 @@ class Bullet(Actor):
 
 class Zombie(Actor):
     texture = 'zombie'
-    width = 24/Actor.overscan
-    height = 32/Actor.overscan
+    overscan = Point(1.8,1.05)
+    width = 24/overscan.x
+    height = 32/overscan.y
     jump_amount = 0
     weapon_types = [WeaponTypes.FIST]
     fps = 24
