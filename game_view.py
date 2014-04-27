@@ -24,6 +24,7 @@ class Viewpos(object):
         self.shake_end = None
         self.shake_duration = 1
         self.shake = Point(0,0)
+        self.last_update   = globals.time
 
     def NoTarget(self):
         self.target        = None
@@ -86,6 +87,8 @@ class Viewpos(object):
 
     def update(self,t):
         self.t = t
+        elapsed = t - self.last_update
+        self.last_update = t
         
         if self.shake_end:
             if t >= self.shake_end:
@@ -98,7 +101,7 @@ class Viewpos(object):
 
         if self.follow:
             #We haven't locked onto it yet, so move closer, and lock on if it's below the threshold
-            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.1)
+            fpos = (self.follow.GetPosCentre()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.1)
             if not fpos:
                 return
             target = fpos - (globals.screen*0.5).to_int()
@@ -107,9 +110,9 @@ class Viewpos(object):
             direction = diff.direction()
             
             if abs(diff.x) < self.max_away.x and abs(diff.y) < self.max_away.y:
-                adjust = diff*0.02
+                adjust = diff*0.02*elapsed*0.06
             else:
-                adjust = diff*0.03
+                adjust = diff*0.03*elapsed*0.06
             #adjust = adjust.to_int()
             if adjust.x == 0 and adjust.y == 0:
                 adjust = direction
@@ -146,6 +149,8 @@ class TileTypes:
     PISTOL              = 12
     BULLETS             = 13
     HEALTH              = 14
+    MUTANT_ZOMBIE       = 15
+    MISSILE             = 16
     Impassable          = set((GRASS,ROCK,ROCK_FLOOR))
     Ladders             = set((LADDER_TOP,LADDER))
     LadderTops          = set((LADDER_TOP,))
@@ -163,6 +168,8 @@ class TileData(object):
                      TileTypes.PISTOL        : 'tile.png',
                      TileTypes.HEALTH        : 'tile.png',
                      TileTypes.BULLETS       : 'tile.png',
+                     TileTypes.MUTANT_ZOMBIE : 'tile.png',
+                     TileTypes.MISSILE       : 'missile.png',
                      TileTypes.LADDER_TOP    : 'ladder.png'}
 
     def __init__(self,type,pos):
@@ -227,7 +234,7 @@ class TileDataAir(TileData):
 def TileDataFactory(map,type,pos):
     if type in (TileTypes.AIR,TileTypes.PLAYER):
         return TileDataAir(type,pos)
-    if type == TileTypes.ZOMBIE and naked_zombie:
+    if type in (TileTypes.ZOMBIE,TileTypes.MUTANT_ZOMBIE) and naked_zombie:
         return TileDataAir(type,pos)
     return TileData(type,pos)
 
@@ -245,7 +252,9 @@ class GameMap(object):
                      'P' : TileTypes.PISTOL,
                      'b' : TileTypes.BULLETS,
                      'h' : TileTypes.HEALTH,
-                     'z' : TileTypes.ZOMBIE}
+                     'z' : TileTypes.ZOMBIE,
+                     'm' : TileTypes.MISSILE,
+                     'Z' : TileTypes.MUTANT_ZOMBIE,}
     def __init__(self,name,parent):
         global naked_zombie
         self.size   = Point(128,92)
@@ -298,6 +307,9 @@ class GameMap(object):
                         self.actors.append(self.player)
                     if self.input_mapping[tile] == TileTypes.ZOMBIE:
                         zombie = actors.Zombie(self,Point(x+0.2,y))
+                        self.actors.append(zombie)
+                    if self.input_mapping[tile] == TileTypes.MUTANT_ZOMBIE:
+                        zombie = actors.MutantZombie(self,Point(x+0.2,y))
                         self.actors.append(zombie)
                     if self.input_mapping[tile] == TileTypes.AXE:
                         axe = actors.AxeItem(self,Point(x+0.2,y))

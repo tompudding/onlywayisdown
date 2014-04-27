@@ -164,8 +164,14 @@ class ZombieBite(Fist):
     duration = 1000
     vectors = {Directions.LEFT : Point(-0.4,1.5), Directions.RIGHT: Point(1.5,1.5)}
 
+class MutantZombieBite(Fist):
+    duration = 1000
+    damage = 20
+    vectors = {Directions.LEFT : Point(-0.4,1.5), Directions.RIGHT: Point(1.5,1.5)}
+
+
 class Axe(Weapon):
-    duration = 700
+    duration = 550
     damage = 20
     variance = 10
     vectors = {Directions.LEFT : Point(-0.5,1.5), Directions.RIGHT: Point(1.8,1.5)}
@@ -198,6 +204,7 @@ class Actor(object):
                          Directions.RIGHT : Point(1,0)}
 
         self.dirs = {}
+        self.last_move_speed = 0
         self.move_speed = Point(0,0)
         self.move_direction = Point(0,0)
         for dir,name in self.dirsa:
@@ -354,9 +361,6 @@ class Actor(object):
         if self.attacking:
             return
 
-        #I don't understand why I need this. Occasionally get huge values here. Figure it out later
-        if abs(self.move_speed.y) > 0.5:
-            self.move_speed.y = 0
         if self.on_ground() or self.on_ladder():
             self.move_speed.x += self.move_direction.x*elapsed*0.03
             if self.jumping and not self.jumped:
@@ -498,6 +502,8 @@ class Actor(object):
                             new_amount = (actor.pos.y-pos.y-self.threshold)
                         else:
                             new_amount = (actor.pos.y+actor.size.y-pos.y+self.threshold)
+                        if abs(new_amount) <= 0.0001 and abs(amount.y) > 0.0001:
+                            self.move_speed.y = 0
                         if (abs(new_amount) < 0.2):
                             amount.y = new_amount
                         target_y = pos.y + amount.y
@@ -522,6 +528,9 @@ class Actor(object):
 
     def GetPos(self):
         return self.pos
+
+    def GetPosCentre(self):
+        return self.pos+self.size
 
     def ResetWalked(self):
         self.walked = 0
@@ -887,9 +896,11 @@ class Zombie(Actor):
     initial_health = 40
     reaction_time = 500
     reload_time = 2000
+    walk_speed = 0.02
+    attack_thresh = 1.0
     def __init__(self,map,pos):
         self.weapon = ZombieBite(self)
-        self.speed = 0.02 + random.random()*0.01
+        self.speed = self.walk_speed + random.random()*0.01
         self.random_walk_end = None
         self.close_trigger = None
         super(Zombie,self).__init__(map,pos)
@@ -915,9 +926,9 @@ class Zombie(Actor):
                 else:
                     self.move_direction = Point(-self.speed,0)
                 if self.dir == Directions.LEFT:
-                    th = 1.5
+                    th = 1.5*self.attack_thresh
                 else:
-                    th = 1
+                    th = 1*self.attack_thresh
                 if not self.attacking and abs(diff.x) < th:
                     if self.close_trigger and self.close_trigger <= globals.time:
                         self.weapon.Fire(None)
@@ -944,3 +955,18 @@ class Zombie(Actor):
         pos.x = self.pos.x + (pos.x-self.pos.x)*0.5
         print 'zd',amount
         super(Zombie,self).Damage(amount,pos)
+
+class MutantZombie(Zombie):
+    overscan = Point(1.8,1.05)
+    width = 24*1.2/overscan.x
+    height = 32*1.2/overscan.y
+    initial_health = 60
+    walk_speed = 0.01
+    attack_thresh = 1.5
+
+    def __init__(self,map,pos):
+        self.weapon = MutantZombieBite(self)
+        self.speed = self.walk_speed + random.random()*0.01
+        self.random_walk_end = None
+        self.close_trigger = None
+        super(MutantZombie,self).__init__(map,pos)
