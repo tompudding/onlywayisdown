@@ -447,7 +447,7 @@ class Bullet(Actor):
     width = 1
     height = 1
     damage_amount = 10
-    speed = 0.2
+    speed = 1
 
     def __init__(self,map,pos,angle,launcher):
         self.map  = map
@@ -502,7 +502,7 @@ class Bullet(Actor):
             self.last_update = globals.time
             return
         elapsed = globals.time - self.last_update
-
+        self.last_update = globals.time
         #self.move_speed.y += globals.gravity*elapsed*0.03
         amount = Point(self.move_speed.x*elapsed*0.03,self.move_speed.y*elapsed*0.03)
 
