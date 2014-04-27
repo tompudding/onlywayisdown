@@ -227,6 +227,14 @@ class Actor(object):
                 return True
         return False
 
+    def on_ladder(self):
+        for x in 0,self.size.x:
+            pos = self.pos + Point(x,-self.threshold*2)
+            target_tile_y = self.map.data[int(pos.x)][int(pos.y)]
+            if target_tile_y.type not in game_view.TileTypes.Ladders:
+                return False
+        return True
+
     def Update(self,t):
         if self.attacking:
             finished = self.weapon.Update(t)
@@ -249,7 +257,7 @@ class Actor(object):
         if self.attacking:
             return
         
-        if self.on_ground():
+        if self.on_ground() or self.on_ladder():
             self.move_speed.x += self.move_direction.x*elapsed*0.03
             if self.jumping and not self.jumped:
                 self.move_speed.y += self.jump_amount
@@ -341,13 +349,14 @@ class Actor(object):
                 target_y = 0
             target_tile_y = self.map.data[int(pos.x)][int(target_y)]
             
-            if target_tile_y.type in game_view.TileTypes.Impassable:
+            if target_tile_y.type in game_view.TileTypes.Impassable | game_view.TileTypes.Ladders:
                 if amount.y > 0:
                     amount.y = (int(target_y)-pos.y-self.threshold)
                 else:
                     amount.y = (int(target_y)+1+self.threshold-pos.y)
                 target_y = pos.y + amount.y
                 self.TriggerCollide(None)
+                    
             elif (int(pos.x),int(target_y)) in self.map.object_cache:
                 obj = self.map.object_cache[int(pos.x),int(target_y)]
                 if obj.Contains(Point(pos.x,target_y)):

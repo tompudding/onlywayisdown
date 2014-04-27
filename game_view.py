@@ -120,6 +120,7 @@ class TileTypes:
     ROCK                = 5
     LADDER              = 6
     Impassable          = set((GRASS,ROCK))
+    Ladders             = set((LADDER,))
 
 class TileData(object):
     texture_names = {TileTypes.GRASS         : 'grass.png',
