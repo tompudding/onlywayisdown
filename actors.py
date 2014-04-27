@@ -116,6 +116,11 @@ class Weapon(object):
 class Gun(Weapon):
     wavery = 0.2
     def Fire(self,pos):
+        if self.player.bullets <= 0:
+            print 'click!'
+            self.end = globals.time
+            return
+        self.player.AdjustBullets(-1)
         self.end = globals.time + self.duration
         
         print 'boom!'
@@ -154,6 +159,7 @@ class Actor(object):
                          Directions.DOWN  : Point(0,0),
                          Directions.LEFT  : Point(-1,0),
                          Directions.RIGHT : Point(1,0)}
+
         self.dirs = {}
         self.move_speed = Point(0,0)
         self.move_direction = Point(0,0)
@@ -192,7 +198,7 @@ class Actor(object):
         self.splat_pos = pos - self.pos
         self.splat_end = globals.time + 1000
         self.splat_quad.Enable()
-        self.health -= amount
+        self.AdjustHealth(-amount)
         if self.health <= 0:
             self.dead = True
             self.splat_quad.Delete()
@@ -200,6 +206,9 @@ class Actor(object):
             if self.dir == Directions.RIGHT:
                 tc = [tc[3],tc[2],tc[1],tc[0]]
             self.quad.SetTextureCoordinates(tc)
+
+    def AdjustHealth(self,amount):
+        self.health += amount
 
     def RemoveFromMap(self):
         if self.pos != None:
@@ -456,7 +465,28 @@ class Player(Actor):
         self.angle = 0
         self.gun_pos = Point(14,21)
         self.mouse_pos = Point(0,0)
+        self.bullets = 6
         super(Player,self).__init__(map,pos)
+        self.info_box = ui.Box(parent = globals.screen_root,
+                               pos = Point(0,0),
+                               tr = Point(1,0.08),
+                               colour = (0,0,0,0.7))
+        self.info_box.health_text = ui.TextBox(self.info_box,
+                                               bl = Point(0.8,0),
+                                               tr = Point(1,0.7),
+                                               text = '\x81:%d' % self.initial_health,
+                                               textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                               colour = (1,1,0,1),
+                                               scale = 3,
+                                               alignment = drawing.texture.TextAlignments.CENTRE)
+        self.info_box.bullet_text = ui.TextBox(self.info_box,
+                                               bl = Point(0.5,0),
+                                               tr = Point(1,0.7),
+                                               text = '\x82:%d' % self.bullets,
+                                               textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                               colour = (1,1,0,1),
+                                               scale = 3,
+                                               alignment = drawing.texture.TextAlignments.CENTRE)
 
     def GunPos(self):
         return self.pos + self.gun_pos[self.dir].to_float()/globals.tile_dimensions
@@ -467,6 +497,14 @@ class Player(Actor):
     def Update(self,t):
         self.UpdateMouse(self.mouse_pos,None)
         super(Player,self).Update(t)
+
+    def AdjustHealth(self,amount):
+        super(Player,self).AdjustHealth(amount)
+        self.info_box.health_text.SetText('\x81:%d' % self.health,colour = (1,1,0,1))
+
+    def AdjustBullets(self,amount):
+        self.bullets += amount
+        self.info_box.bullet_text.SetText('\x82:%d' % self.bullets,colour = (1,1,0,1))
 
     def UpdateMouse(self,pos,rel):
         diff = pos - ((self.pos*globals.tile_dimensions) + self.shoulder_pos)

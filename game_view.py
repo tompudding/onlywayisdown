@@ -79,7 +79,7 @@ class Viewpos(object):
         self.t = t
         if self.follow:
             #We haven't locked onto it yet, so move closer, and lock on if it's below the threshold
-            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.4)
+            fpos = (self.follow.GetPos()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.2)
             if not fpos:
                 return
             target = fpos - (globals.screen*0.5).to_int()
@@ -288,6 +288,7 @@ class GameView(ui.RootElement):
         print self.map.world_size
         self.viewpos = Viewpos(Point(0,self.map.world_size.y-globals.screen.y))
         self.game_over = False 
+        
         #pygame.mixer.music.load('music.ogg')
         #self.music_playing = False
         super(GameView,self).__init__(Point(0,0),globals.screen)
