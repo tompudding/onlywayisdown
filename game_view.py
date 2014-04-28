@@ -455,6 +455,7 @@ z  z     p                                z z
         self.actors = [act for act in self.actors if act is not actor]
 
 class GameView(ui.RootElement):
+    music_volume = 0.3
     def __init__(self):
         self.atlas = globals.atlas = drawing.texture.TextureAtlas('tiles_atlas_0.png','tiles_atlas.txt')
         self.map = GameMap('level.txt',self)
@@ -463,8 +464,8 @@ class GameView(ui.RootElement):
         self.viewpos = Viewpos(Point(0,self.map.world_size.y-globals.screen.y))
         self.game_over = False 
         
-        #pygame.mixer.music.load('music.ogg')
-        #self.music_playing = False
+        pygame.mixer.music.load('music.ogg')
+        self.music_playing = False
         super(GameView,self).__init__(Point(0,0),globals.screen)
         #skip titles for development of the main game
         self.mode = modes.GameMode(self)
@@ -472,9 +473,9 @@ class GameView(ui.RootElement):
         self.StartMusic()
 
     def StartMusic(self):
-        pass
-        #pygame.mixer.music.play(-1)
-        #self.music_playing = True
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(self.music_volume)
+        self.music_playing = True
 
     def Draw(self):
         drawing.ResetState()
@@ -517,7 +518,7 @@ class GameView(ui.RootElement):
                 pygame.mixer.music.set_volume(0)
             else:
                 self.music_playing = True
-                pygame.mixer.music.set_volume(1)
+                pygame.mixer.music.set_volume(self.music_volume)
         self.mode.KeyUp(key)
 
     def MouseButtonDown(self,pos,button):

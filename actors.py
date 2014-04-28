@@ -606,6 +606,14 @@ class Player(Actor):
                                                colour = (1,1,0,1),
                                                scale = 3,
                                                alignment = drawing.texture.TextAlignments.CENTRE)
+        self.info_box.mute_text = ui.TextBox(self.info_box,
+                                               bl = Point(0.2,0),
+                                               tr = Point(0.7,0.7),
+                                               text = 'Press DEL to mute music',
+                                               textType = drawing.texture.TextTypes.SCREEN_RELATIVE,
+                                               colour = (1,1,0,1),
+                                               scale = 3,
+                                               alignment = drawing.texture.TextAlignments.CENTRE)
         self.inv_quads = [drawing.Quad(globals.screen_texture_buffer,tc = globals.atlas.TextureSpriteCoords('empty.png')) for i in xrange(3)]
         self.sel_quads = [drawing.Quad(globals.screen_texture_buffer,tc = globals.atlas.TextureSpriteCoords('selected.png')) for i in xrange(3)]
         box_size = 12
@@ -613,7 +621,7 @@ class Player(Actor):
         sep_y = int((self.info_box.absolute.size.y - box_size)/2)
         print self.info_box.absolute.size,sep_x,sep_y
         for i in xrange(3):    
-            bl = self.info_box.absolute.bottom_left + Point(self.info_box.absolute.size.x*0.2,0) + Point(((i+1)*sep_x)+(i*box_size),sep_y)
+            bl = self.info_box.absolute.bottom_left + Point(self.info_box.absolute.size.x*0.03,0) + Point(((i+1)*sep_x)+(i*box_size),sep_y)
             tr = bl + Point(box_size,box_size)
             print bl,tr
             self.inv_quads[i].SetVertices(bl,tr,9000)
