@@ -955,6 +955,7 @@ class Zombie(Actor):
         self.speed = self.walk_speed + random.random()*0.01
         self.random_walk_end = None
         self.close_trigger = None
+        self.seen = False
         super(Zombie,self).__init__(map,pos)
 
     def Update(self,t):
@@ -975,6 +976,11 @@ class Zombie(Actor):
                 self.close_trigger = None
             else:
                 #walk towards the player
+                if not self.seen:
+                    sounds = globals.sounds.zombie_sounds
+                    if random.random() < 0.2:
+                        random.choice(sounds).play()
+                    self.seen = True
                 if self.map.player.pos.x > self.pos.x:
                     self.move_direction = Point(self.speed,0)
                 else:
@@ -989,7 +995,7 @@ class Zombie(Actor):
                         self.attacking = True
                     elif self.close_trigger == None:
                         self.close_trigger = globals.time + self.reaction_time
-                        print 'yo',self.close_trigger
+                        #print 'yo',self.close_trigger
                 if abs(diff.x) >= th:
                     self.close_trigger = None
                         

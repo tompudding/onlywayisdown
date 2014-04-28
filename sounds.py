@@ -25,7 +25,7 @@ class Sounds(object):
                 self.punch_sounds.append(sound)
             if 'zombie_attack' in name:
                 self.zombie_attack_sounds.append(sound)
-            if 'zombie' in name:
+            if 'zombie' in name and 'zombie_' not in name:
                 self.zombie_sounds.append(sound)
             
             setattr(self,name,sound)
