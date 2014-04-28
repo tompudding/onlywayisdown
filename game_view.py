@@ -101,7 +101,7 @@ class Viewpos(object):
 
         if self.follow:
             #We haven't locked onto it yet, so move closer, and lock on if it's below the threshold
-            fpos = (self.follow.GetPosCentre()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.1)
+            fpos = (self.follow.GetPosCentre()*globals.tile_dimensions).to_int() + globals.screen*Point(0,0.03)
             if not fpos:
                 return
             target = fpos - (globals.screen*0.5).to_int()
