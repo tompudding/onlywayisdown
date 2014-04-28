@@ -103,6 +103,7 @@ class WeaponTypes:
              PISTOL : 'pistol'}
 
 class Weapon(object):
+    sounds = None
     def __init__(self,player):
         self.player = player
         self.icon_tc = globals.atlas.TextureSpriteCoords(self.icon)
@@ -114,6 +115,10 @@ class Weapon(object):
         return Point(0,0)
         
     def Fire(self,pos):
+        if self.sounds:
+            for sound in self.sounds:
+                sound.stop()
+            random.choice(self.sounds).play()
         self.end = globals.time + self.duration
         self.save_anim = self.player.dirs[self.player.dir][self.type]
         self.player.quad.SetTextureCoordinates(self.save_anim.attack_tc)
@@ -132,11 +137,22 @@ class Weapon(object):
 
 class Gun(Weapon):
     wavery = 0.2
+
+    def __init__(self,player):
+        self.sounds = globals.sounds.gunshot_sounds
+        super(Gun,self).__init__(player)
+
     def Fire(self,pos):
+        
         if self.player.bullets <= 0:
             print 'click!'
             self.end = globals.time
+            globals.sounds.click.play()
             return
+        if self.sounds:
+            for sound in self.sounds:
+                sound.stop()
+            random.choice(self.sounds).play()
         self.player.AdjustBullets(-1)
         self.end = globals.time + self.duration
         
@@ -153,6 +169,12 @@ class Fist(Weapon):
     icon = 'fist.png'
     type = WeaponTypes.FIST
 
+    def __init__(self,player):
+        #hack hack
+        if not isinstance(self,ZombieBite) and not isinstance(self,MutantZombieBite):
+            self.sounds = globals.sounds.punch_sounds
+        super(Fist,self).__init__(player)
+
     def Disturbance(self):
         #sometimes we punch the stomach
         if random.random() < 0.2:
@@ -164,11 +186,19 @@ class ZombieBite(Fist):
     duration = 1000
     vectors = {Directions.LEFT : Point(-0.4,1.5), Directions.RIGHT: Point(1.5,1.5)}
 
+    def __init__(self,player):
+        self.sounds = globals.sounds.zombie_attack_sounds
+        super(ZombieBite,self).__init__(player)
+
+
 class MutantZombieBite(Fist):
     duration = 1000
     damage = 20
     vectors = {Directions.LEFT : Point(-0.4,1.5), Directions.RIGHT: Point(1.5,1.5)}
 
+    def __init__(self,player):
+        self.sounds = globals.sounds.zombie_attack_sounds
+        super(MutantZombieBite,self).__init__(player)
 
 class Axe(Weapon):
     duration = 550
@@ -177,7 +207,12 @@ class Axe(Weapon):
     vectors = {Directions.LEFT : Point(-0.5,1.5), Directions.RIGHT: Point(1.8,1.5)}
     icon = 'axe.png'
     type = WeaponTypes.AXE
- 
+
+    def __init__(self,player):
+        self.sounds = globals.sounds.axe_sounds
+        super(Axe,self).__init__(player)
+
+
 class Pistol(Gun):
     duration = 200
     icon = 'pistol.png'
@@ -187,6 +222,7 @@ class Actor(object):
     texture   = None
     width     = None
     height    = None
+    dead_sound = None
     threshold = 0.01
     z_adjust  = 0
     overscan  = Point(1.2,1.05)
@@ -266,6 +302,8 @@ class Actor(object):
         if self.health > self.initial_health:
             self.health = self.initial_health
         if self.health < 0:
+            if self.dead_sound:
+                self.dead_sound.play()
             self.health = 0
 
     def RemoveFromMap(self):
@@ -547,6 +585,7 @@ class Player(Actor):
 
     def __init__(self,map,pos):
         self.bullets = 6
+        self.dead_sound = globals.sounds.player_dead
         self.info_box = ui.Box(parent = globals.screen_root,
                                pos = Point(0,0),
                                tr = Point(1,0.08),
@@ -911,6 +950,7 @@ class Zombie(Actor):
     walk_speed = 0.02
     attack_thresh = 1.0
     def __init__(self,map,pos):
+        self.dead_sound = globals.sounds.zombie_dead
         self.weapon = ZombieBite(self)
         self.speed = self.walk_speed + random.random()*0.01
         self.random_walk_end = None
