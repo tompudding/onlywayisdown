@@ -960,6 +960,8 @@ class Zombie(Actor):
     def Update(self,t):
         #print 'zombie update',t
         #Try moving toward the player
+        if self.dead:
+            return super(Zombie,self).Update(t)
         if self.random_walk_end:
             if globals.time > self.random_walk_end:
                 self.random_walk_end = None
