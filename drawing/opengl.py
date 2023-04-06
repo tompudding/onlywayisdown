@@ -7,38 +7,43 @@ from OpenGL.GLU import *
 numpymodule.NumpyHandler.ERROR_ON_COPY = True
 
 
-def Init(w,h):
+def Init(w, h):
     """
     One time initialisation of the screen
     """
     glClearColor(0.0, 0.0, 0.0, 1.0)
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(0, w, 0, h,-10000,10000)
+    glOrtho(0, w, 0, h, -10000, 10000)
     glMatrixMode(GL_MODELVIEW)
 
     glEnable(GL_TEXTURE_2D)
     glEnable(GL_BLEND)
-    glEnable(GL_DEPTH_TEST);
-    glAlphaFunc(GL_GREATER, 0.25);
-    glEnable(GL_ALPHA_TEST);
+    glEnable(GL_DEPTH_TEST)
+    glAlphaFunc(GL_GREATER, 0.25)
+    glEnable(GL_ALPHA_TEST)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    glColor4f(1.0,1.0,1.0,1.0)
+    glColor4f(1.0, 1.0, 1.0, 1.0)
+
 
 def ResetState():
     glLoadIdentity()
 
-def Translate(x,y,z):
-    glTranslatef(x,y,z)
 
-def Scale(x,y,z):
-    glScalef(x,y,z)
+def Translate(x, y, z):
+    glTranslatef(x, y, z)
+
+
+def Scale(x, y, z):
+    glScalef(x, y, z)
+
 
 def NewFrame():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
+
 
 def InitDrawing():
     """
@@ -51,7 +56,8 @@ def InitDrawing():
     glEnableClientState(GL_COLOR_ARRAY)
     glEnable(GL_TEXTURE_2D)
 
-def DrawAll(quad_buffer,texture):
+
+def DrawAll(quad_buffer, texture):
     """
     Draw a quadbuffer with with a vertex array, texture coordinate array, and a colour
     array
@@ -59,8 +65,9 @@ def DrawAll(quad_buffer,texture):
     glBindTexture(GL_TEXTURE_2D, texture)
     glVertexPointerf(quad_buffer.vertex_data)
     glTexCoordPointerf(quad_buffer.tc_data)
-    glColorPointer(4,GL_FLOAT,0,quad_buffer.colour_data)
-    glDrawElements(quad_buffer.draw_type,quad_buffer.current_size,GL_UNSIGNED_INT,quad_buffer.indices)
+    glColorPointer(4, GL_FLOAT, 0, quad_buffer.colour_data)
+    glDrawElements(quad_buffer.draw_type, quad_buffer.current_size, GL_UNSIGNED_INT, quad_buffer.indices)
+
 
 def DrawNoTexture(quad_buffer):
     """
@@ -70,12 +77,13 @@ def DrawNoTexture(quad_buffer):
     glDisableClientState(GL_TEXTURE_COORD_ARRAY)
     glDisable(GL_TEXTURE_2D)
     glVertexPointerf(quad_buffer.vertex_data)
-    glColorPointer(4,GL_FLOAT,0,quad_buffer.colour_data)
-    glDrawElements(quad_buffer.draw_type,quad_buffer.current_size,GL_UNSIGNED_INT,quad_buffer.indices)
+    glColorPointer(4, GL_FLOAT, 0, quad_buffer.colour_data)
+    glDrawElements(quad_buffer.draw_type, quad_buffer.current_size, GL_UNSIGNED_INT, quad_buffer.indices)
     glEnable(GL_TEXTURE_2D)
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-    #def Draw
+    # def Draw
+
 
 def LineWidth(width):
     glEnable(GL_LINE_SMOOTH)
