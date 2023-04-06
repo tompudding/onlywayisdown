@@ -307,7 +307,7 @@ class Actor(object):
             self.health = 0
 
     def RemoveFromMap(self):
-        if self.pos != None:
+        if self.pos is not None:
             bl = self.pos.to_int()
             tr = (self.pos+self.size).to_int()
             for x in xrange(bl.x,tr.x+1):
@@ -391,7 +391,7 @@ class Actor(object):
             target.Collect(self)
 
     def Move(self,t):
-        if self.last_update == None:
+        if self.last_update is None:
             self.last_update = globals.time
             return
         elapsed = globals.time - self.last_update
@@ -423,7 +423,7 @@ class Actor(object):
             dir = Directions.RIGHT
         elif amount.x < 0:
             dir = Directions.LEFT
-        if dir != None and dir != self.dir:
+        if dir is not None and dir != self.dir:
             self.dir = dir
             self.dirs[self.dir][self.weapon.type].SetStart(self.walked)
 
@@ -747,7 +747,7 @@ class Bullet(Actor):
         self.destroyed = False
 
     def SetPos(self,pos):
-        if self.pos != None:
+        if self.pos is not None:
             self.map.RemoveActor(self.pos.to_int(),self)
         
         self.pos = pos
@@ -775,7 +775,7 @@ class Bullet(Actor):
         self.Move(t)
 
     def Move(self,t):
-        if self.last_update == None:
+        if self.last_update is None:
             self.last_update = globals.time
             return
         elapsed = globals.time - self.last_update
@@ -831,8 +831,8 @@ class Bullet(Actor):
     def TriggerCollide(self,target,pos = None):
         if self.destroyed:
             return
-        if target != None:
-            target.Damage(self.damage_amount,pos if pos != None else self.pos)
+        if target is not None:
+            target.Damage(self.damage_amount,pos if pos is not None else self.pos)
         self.Destroy()
 
 class Collectable(Actor):
@@ -851,7 +851,7 @@ class Collectable(Actor):
         self.destroyed = False
 
     def SetPos(self,pos):
-        if self.pos != None:
+        if self.pos is not None:
             self.map.RemoveActor(self.pos.to_int(),self)
         
         self.pos = pos
@@ -1001,7 +1001,7 @@ class Zombie(Actor):
                     if self.close_trigger and self.close_trigger <= globals.time:
                         self.weapon.Fire(None)
                         self.attacking = True
-                    elif self.close_trigger == None:
+                    elif self.close_trigger is None:
                         self.close_trigger = globals.time + self.reaction_time
                         #print 'yo',self.close_trigger
                 if abs(diff.x) >= th:

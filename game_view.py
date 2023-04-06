@@ -70,7 +70,7 @@ class Viewpos(object):
         self.follow_locked = False
 
     def HasTarget(self):
-        return self.target != None
+        return self.target is not None
 
     def Skip(self):
         self._pos = self.target
@@ -530,7 +530,7 @@ class GameView(ui.RootElement):
 
     def MouseMotion(self,pos,rel,handled):
         #print 'mouse',pos
-        #if self.selected_player != None:
+        #if self.selected_player is not None:
         #    self.selected_player.MouseMotion()
         screen_pos = self.viewpos.pos + pos
         self.mode.MouseMotion(screen_pos,rel)
