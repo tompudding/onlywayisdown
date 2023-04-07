@@ -2,6 +2,7 @@ import sys, pygame, glob, os
 
 from pygame.locals import *
 import pygame.mixer
+import globals
 
 pygame.mixer.init()
 
@@ -13,11 +14,12 @@ class Sounds(object):
         self.punch_sounds = []
         self.zombie_attack_sounds = []
         self.zombie_sounds = []
-        for filename in glob.glob("*.ogg"):
+        path = globals.pyinst.get_path()
+        for filename in glob.glob(os.path.join(path, "*.ogg")):
             # print filename
             sound = pygame.mixer.Sound(filename)
             sound.set_volume(0.6)
-            name = os.path.splitext(filename)[0]
+            name = os.path.basename(os.path.splitext(filename)[0])
             if "axe" in name:
                 self.axe_sounds.append(sound)
             if "gunshot" in name:

@@ -1,3 +1,5 @@
+from . import pyinst
+
 screen = None
 quad_buffer = None
 ui_buffer = None

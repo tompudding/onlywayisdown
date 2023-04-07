@@ -89,7 +89,7 @@ class Viewpos(object):
         self.t = t
         elapsed = t - self.last_update
         self.last_update = t
-        
+
         if self.shake_end:
             if t >= self.shake_end:
                 self.shake_end = None
@@ -108,7 +108,7 @@ class Viewpos(object):
             diff = target - self._pos
             #print diff.SquareLength(),self.follow_threshold
             direction = diff.direction()
-            
+
             if abs(diff.x) < self.max_away.x and abs(diff.y) < self.max_away.y:
                 adjust = diff*0.02*elapsed*0.06
             else:
@@ -118,7 +118,7 @@ class Viewpos(object):
                 adjust = direction
             self._pos += adjust
             return
-                
+
         elif self.target:
             if t >= self.target_time:
                 self._pos = self.target
@@ -190,7 +190,7 @@ class TileData(object):
 
         #what tcs do we want?
         full_tc = globals.atlas.TextureSpriteCoords(self.name)
-        
+
         bl_tc = Point(pos.x%self.tex_size.x,pos.y%self.tex_size.y)/(self.tex_size.to_float())
         tr_tc = bl_tc + Point(1,1)/(self.tex_size.to_float())
 
@@ -200,7 +200,7 @@ class TileData(object):
               [full_tc[0][0] + bl_tc[0]*full_tc_size[0],full_tc[0][1] + tr_tc[1]*full_tc_size[1]],
               [full_tc[0][0] + tr_tc[0]*full_tc_size[0],full_tc[0][1] + tr_tc[1]*full_tc_size[1]],
               [full_tc[0][0] + tr_tc[0]*full_tc_size[0],full_tc[0][1] + bl_tc[1]*full_tc_size[1]]]
-        
+
         #print tc
 
         self.quad = drawing.Quad(globals.quad_buffer,tc = tc)
@@ -264,11 +264,11 @@ class GameMap(object):
     filedata = """
 
 
-                 
-                 
-                 
-                  
-z  z     p                                z z                   
+
+
+
+
+z  z     p                                z z
 --------------------------LL----------------------MMMMMMMMMMMMMMMM--------------------------------------------------------------
 ..........................ll......................mmmmmmmmmmmmmmmm..............................................................
 ..........................ll......................mmmmmmmmmmmmmmmm..............................................................
@@ -462,9 +462,9 @@ class GameView(ui.RootElement):
         self.map.world_size = self.map.size * globals.tile_dimensions
         print self.map.world_size
         self.viewpos = Viewpos(Point(0,self.map.world_size.y-globals.screen.y))
-        self.game_over = False 
-        
-        pygame.mixer.music.load('music.ogg')
+        self.game_over = False
+
+        pygame.mixer.music.load(globals.pyinst.path('music.ogg'))
         self.music_playing = False
         super(GameView,self).__init__(Point(0,0),globals.screen)
         #skip titles for development of the main game
@@ -482,7 +482,7 @@ class GameView(ui.RootElement):
         drawing.Translate(-self.viewpos.pos.x,-self.viewpos.pos.y,0)
         drawing.DrawAll(globals.quad_buffer,self.atlas.texture.texture)
         drawing.DrawAll(globals.nonstatic_text_buffer,globals.text_manager.atlas.texture.texture)
-        
+
     def Update(self,t):
         #print self.viewpos.pos
         if self.mode:
@@ -490,7 +490,7 @@ class GameView(ui.RootElement):
 
         if self.game_over:
             return
-            
+
         self.t = t
         self.viewpos.Update(t)
         if self.viewpos.pos.x < 0:
@@ -507,7 +507,7 @@ class GameView(ui.RootElement):
     def GameOver(self):
         self.game_over = True
         self.mode = modes.GameOver(self)
-        
+
     def KeyDown(self,key):
         self.mode.KeyDown(key)
 
@@ -536,6 +536,3 @@ class GameView(ui.RootElement):
         self.mode.MouseMotion(screen_pos,rel)
 
         return super(GameView,self).MouseMotion(pos,rel,handled)
-
-
-
